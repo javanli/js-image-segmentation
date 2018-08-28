@@ -1,0 +1,16 @@
+.tool-bar {
+  display: flex;
+  justify-content:center;
+  margin-top:30px;
+}
+.tool-item {
+  width: 100px;
+}
+.paint-canvas-wrapper {
+  display: flex;
+  justify-content:center;
+  margin-top: 60px;
+}
+.paint-canvas-wrapper canvas {
+  border: 1px solid black;
+}

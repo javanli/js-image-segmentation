@@ -1,0 +1,17 @@
+{
+  "name": "canvas-paint",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "http://demos.javanli.cn/paint",
+  "dependencies": {
+    "react": "^16.4.2",
+    "react-dom": "^16.4.2",
+    "react-scripts": "1.1.5"
+  },
+  "scripts": {
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
+}
