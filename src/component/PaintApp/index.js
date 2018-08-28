@@ -1,8 +1,8 @@
 import React, { Component } from "react";
 import { Button } from 'antd';
-const ButtonGroup = Button.Group;
 import PaintCanvas from "../PaintCanvas";
 import './index.css'
+const ButtonGroup = Button.Group;
 export default class extends Component {
   constructor(props) {
     super(props);
