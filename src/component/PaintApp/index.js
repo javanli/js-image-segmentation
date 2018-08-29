@@ -1,46 +1,40 @@
 import React, { Component } from "react";
-import { Button } from 'antd';
+import { Radio, Button } from 'antd';
 import PaintCanvas from "../PaintCanvas";
+import { ACTION_DRAG, ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER } from '../common/common'
+import { inject, observer } from "mobx-react";
 import './index.css'
-const ButtonGroup = Button.Group;
-export default class extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      type: 'ACTION_LINE',
-      brushSize: 10,
-      brushColor: "#f005",
-      rubberSize: 12,
-    }
-  }
+@inject('paintStore')
+@observer
+class PaintApp extends Component {
   render() {
+    let { paintStore } = this.props;
     return (
       <div className="paint-app">
-        <ButtonGroup>
-          <Button
+        <Radio.Group>
+          <Radio.Button
             className="tool-item"
             style={{ width: 20, backgroundColor: '#0f0' }}
-            onClick={() => { this.setState({ brushColor: '#0f05', type: 'ACTION_LINE' }) }}
-          ></Button>
-          <Button
+            onClick={() => { paintStore.setActionType(ACTION_CHOOSE_ADD) }}
+          ></Radio.Button>
+          <Radio.Button
             className="tool-item"
             style={{ width: 20, backgroundColor: '#f00' }}
-            onClick={() => { this.setState({ brushColor: '#f005', type: 'ACTION_LINE' }) }}
-          ></Button>
-          <Button className="tool-item" onClick={() => { this.setState({ type: 'ACTION_RUBBER' }) }}>橡皮</Button>
-          <Button>拖拽</Button>
-        </ButtonGroup>
-        <ButtonGroup>
-          <Button className="tool-item" onClick={() => { this.paintCanvas.redo() }}>前进</Button>
-          <Button className="tool-item" onClick={() => { this.paintCanvas.undo() }}>后退</Button>
-          <Button className="tool-item" onClick={() => { this.paintCanvas.clear() }}>清除</Button>
-        </ButtonGroup>
-        <ButtonGroup>
+            onClick={() => { paintStore.setActionType(ACTION_CHOOSE_DEL) }}
+          ></Radio.Button>
+          <Radio.Button className="tool-item" onClick={() => { paintStore.setActionType(ACTION_RUBBER) }}>橡皮</Radio.Button>
+          <Radio.Button className="tool-item" onClick={() => { paintStore.setActionType(ACTION_DRAG) }}>拖拽</Radio.Button>
+        </Radio.Group>
+        <Button.Group>
+          <Button className="tool-item" onClick={() => { paintStore.redo() }}>前进</Button>
+          <Button className="tool-item" onClick={() => { paintStore.undo() }}>后退</Button>
+          <Button className="tool-item" onClick={() => { paintStore.clear() }}>清除</Button>
+        </Button.Group>
+        <Button.Group>
           <Button>放大</Button>
           <Button>缩小</Button>
           <Button>最佳比例</Button>
-        </ButtonGroup>
+        </Button.Group>
         <div className="tool-bar">
           <button
             className="tool-item"
@@ -66,7 +60,7 @@ export default class extends Component {
               }
             }}
           >-</button>
-          
+
           <input className="tool-item" type="file" style={{ width: 200 }}
             onChange={(e) => {
               let files = e.target.files;
@@ -75,9 +69,8 @@ export default class extends Component {
               reader.onload = () => {
                 let img = new Image();
                 img.src = reader.result;
-                this.setState({ type: 'ACTION_IMG' });
                 img.onload = () => {
-                  this.paintCanvas.insertImg(img);
+                  paintStore.insertImg(img);
                 }
               }
             }} />
@@ -89,3 +82,5 @@ export default class extends Component {
     );
   }
 }
+
+export default PaintApp;

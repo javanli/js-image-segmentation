@@ -1,39 +1,17 @@
 import React, { Component } from "react";
-const ACTION_LINE = 'ACTION_LINE';
-const ACTION_RUBBER = 'ACTION_RUBBER';
-const ACTION_IMG = 'ACTION_IMG';
-let LineAction = (points, color, size) => {
-  return {
-    type: ACTION_LINE,
-    points: points,
-    color,
-    size
-  }
-}
-let ImgAction = (img, x, y, width, height) => {
-  return {
-    type: ACTION_IMG,
-    img, x, y, width, height
-  }
-}
-export default class extends Component {
+import {ACTION_DRAG,ACTION_CHOOSE_DEL,ACTION_CHOOSE_ADD,ACTION_RUBBER} from '../common/common'
+@inject('paintStore')
+@observer
+class PaintCanvas extends Component {
   static defaultProps = {
-    loadTimeOffset: 5,
-    brushSize: 6,
-    brushColor: "#444",
     canvasWidth: 400,
     canvasHeight: 400,
-    disabled: false,
-    rubberSize: 8,
-    type: ACTION_LINE
+    disabled: false
   };
 
   constructor(props) {
     super(props);
-
     this.isMouseDown = false;
-    this.actions = [];
-    this.currentActionIdx = -1;
     this.bindEvent();
   }
 
@@ -178,40 +156,6 @@ export default class extends Component {
       this.redraw();
     }
   }
-  /**
-   * 操作
-   */
-  clear = () => {
-    if (this.ctx) {
-      this.ctx.clearRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
-    }
-    if (this.ctx2) {
-      this.ctx2.clearRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
-    }
-    this.actions = [];
-  };
-
-  undo = () => {
-    if (this.actions.length > 0) {
-      this.currentActionIdx--;
-      this.redraw();
-      return true;
-    }
-    return false;
-  };
-  redo = () => {
-    if (this.currentActionIdx < this.actions.length - 1) {
-      this.currentActionIdx++;
-      this.redraw();
-    }
-  }
-  insertImg = (img) => {
-    console.log(img.width)
-    let imgAction = new ImgAction(img, 0, 0, img.width, img.height);
-    this.actions.push(imgAction);
-    this.currentActionIdx = this.actions.length - 1;
-    this.redraw();
-  }
   render() {
     let cursor = 'pointer'
     if(this.props.type === ACTION_LINE){
@@ -263,3 +207,4 @@ export default class extends Component {
     );
   }
 }
+export default PaintCanvas;

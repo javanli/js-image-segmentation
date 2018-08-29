@@ -4,7 +4,10 @@
   "private": true,
   "homepage": "http://demos.javanli.cn/paint",
   "dependencies": {
+    "mobx": "^5.1.0",
+    "mobx-react": "^5.2.5",
     "react": "^16.4.2",
+    "react-app-rewire-mobx": "^1.0.8",
     "react-dom": "^16.4.2",
     "react-scripts": "1.1.5"
   },
