@@ -1,5 +1,7 @@
 import React, { Component } from "react";
-import {ACTION_DRAG,ACTION_CHOOSE_DEL,ACTION_CHOOSE_ADD,ACTION_RUBBER} from '../common/common'
+import { inject, observer } from "mobx-react";
+import { ACTION_DRAG, ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER } from '../../common/common'
+import { ACTION_CLEAR } from "../../common/common";
 @inject('paintStore')
 @observer
 class PaintCanvas extends Component {
@@ -11,10 +13,12 @@ class PaintCanvas extends Component {
 
   constructor(props) {
     super(props);
-    this.isMouseDown = false;
     this.bindEvent();
   }
-
+  componentWillReceiveProps(nextProps) {
+    console.log('componentWillReceiveProps');
+    this.redraw();
+  }
   /**
    * 工具函数
    */
@@ -43,12 +47,19 @@ class PaintCanvas extends Component {
   /**
    * 绘制相关
    */
-  redraw = () => {
+  clear = () => {
     if (this.ctx) {
       this.ctx.clearRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
     }
     if (this.ctx2) {
       this.ctx2.clearRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
+    }
+  }
+  redraw = () => {
+    let { paintStore } = this.props;
+    this.clear();
+    if(paintStore.imgAction.img){
+      this.drawImg(paintStore.imgAction);
     }
     this.actions.forEach((action, idx) => {
       if (idx <= this.currentActionIdx) {
@@ -57,17 +68,25 @@ class PaintCanvas extends Component {
     });
   };
   applyAction = (action) => {
-    if (action.type === ACTION_LINE) {
-      this.drawLine(action);
+    let { paintStore } = this.props;
+    if (action.type === ACTION_CHOOSE_ADD) {
+      this.drawLine(action, paintStore.addColor);
     }
-    else if (action.type === ACTION_IMG) {
-      this.drawImg(action);
+    else if (action.type === ACTION_CHOOSE_DEL) {
+      this.drawLine(action, paintStore.delColor);
     }
+    else if (action.type === ACTION_RUBBER) {
+      this.drawLine(action, '#fff');
+    }
+    else if (action.type === ACTION_CLEAR) {
+      this.clear();
+    }
+    
   }
-  drawLine = (lineAction) => {
+  drawLine = (lineAction, color) => {
     if (!this.ctx) return;
     let ctx = this.ctx;
-    let { points, color, size } = lineAction;
+    let { points, size } = lineAction;
     ctx.lineWidth = size;
     ctx.strokeStyle = color;
     this.ctx.lineCap = "round";
@@ -97,74 +116,40 @@ class PaintCanvas extends Component {
     this.ctx.drawImage(img, x, y, width, height);
     this.ctx2.drawImage(img, x, y, width, height);
   }
-  drawStart = e => {
-    this.isMouseDown = true;
-    if (this.currentActionIdx < this.actions.length - 1) {
-      this.actions.splice(this.currentActionIdx + 1, this.actions.length - this.currentActionIdx);
-    }
-
+  onMouseDown = e => {
     let point = this.getMousePos(e);
-    if (this.props.type === ACTION_LINE) {
-      let lineAction = new LineAction([point], this.props.brushColor, this.props.brushSize);
-      this.actions.push(lineAction);
-    }
-    else if (this.props.type === ACTION_RUBBER) {
-      let rubberAction = new LineAction([point], '#fff', this.props.rubberSize);
-      this.actions.push(rubberAction);
-    }
-    else if (this.props.type === ACTION_IMG) {
-      let action = this.actions[this.actions.length - 1];
-      if (action.type === ACTION_IMG) {
-        this.lastDragPoint = point;
-      }
-    }
-    this.currentActionIdx = this.actions.length - 1;
-    this.redraw();
-
+    let { paintStore } = this.props;
+    paintStore.onMouseDownAtPoint(point);
     window.addEventListener('mousemove', this.onMouseMove)
-    window.addEventListener('mouseup', this.drawEnd)
+    window.addEventListener('mouseup', this.onMouseUp)
   };
   onMouseMove = e => {
-    if (!this.isMouseDown || this.props.disabled) return;
-
-    // calculate the current x, y coords
+    let { paintStore } = this.props;
     let point = this.getMousePos(e);
-
-    let currentAction = this.actions[this.currentActionIdx];
-
-    if (currentAction.type === ACTION_LINE) {
-      currentAction.points.push(point);
-    }
-    else if (currentAction.type === ACTION_IMG) {
-      let vx = point.x - this.lastDragPoint.x;
-      let vy = point.y - this.lastDragPoint.y;
-      currentAction.x += vx;
-      currentAction.y += vy;
-      this.lastDragPoint = point;
-    }
-    this.redraw();
+    paintStore.onMouseMoveAtPoint(point);
   };
-  drawEnd = () => {
+  onMouseUp = () => {
     this.isMouseDown = false;
   };
   onMouseWheel = (e) => {
-    let action = this.actions[this.actions.length - 1];
-    if (this.props.type === ACTION_IMG && action.type === ACTION_IMG) {
-      let factor = e.wheelDelta > 0 ? 1.1 : 0.9;
-      action.width *= factor;
-      action.height *= factor;
-      this.redraw();
+    let {paintStore} = this.props;
+    if(e.wheelDelta > 0){
+      paintStore.zoomIn();
+    }
+    else {
+      paintStore.zoomOut();
     }
   }
   render() {
     let cursor = 'pointer'
-    if(this.props.type === ACTION_LINE){
+    let {paintStore} = this.props;
+    if (paintStore.type === ACTION_CHOOSE_ADD || paintStore.type === ACTION_CHOOSE_DEL) {
       cursor = 'url(./pencil.png),auto';
     }
-    else if(this.props.type === ACTION_RUBBER) {
+    else if (paintStore.type === ACTION_RUBBER) {
       cursor = 'url(./rubber.png),auto';
     }
-    else{
+    else {
       cursor = 'pointer';
     }
     return (
@@ -184,11 +169,11 @@ class PaintCanvas extends Component {
               this.ctx = canvas.getContext("2d");
             }
           }}
-          onMouseDown={this.drawStart}
-          onTouchStart={this.drawStart}
+          onMouseDown={this.onMouseDown}
+          onTouchStart={this.onMouseDown}
           onTouchMove={this.onMouseMove}
-          onTouchEnd={this.drawEnd}
-          onTouchCancel={this.drawEnd}
+          onTouchEnd={this.onMouseUp}
+          onTouchCancel={this.onMouseUp}
         />
         <canvas
           width={this.props.canvasWidth}

@@ -9,13 +9,13 @@ export class Action {
   }
 }
 export class ClearAction extends Action {
-  constructor(){
+  constructor() {
     super(ACTION_CLEAR);
   }
 }
-export class AddAction extends Action {
-  constructor(points,size){
-    super(ACTION_CHOOSE_ADD);
+export class DrawAction extends Action {
+  constructor(type, points, size) {
+    super(type);
     this.points = points;
     this.size = size;
   }
@@ -23,23 +23,18 @@ export class AddAction extends Action {
     this.points.push(point);
   }
 }
-export class DelAction extends Action {
-  constructor(points,size){
-    super(ACTION_CHOOSE_ADD);
-    this.points = points;
-    this.size = size;
-  }
-  addPoint = (point) => {
-    this.points.push(point);
+export class AddAction extends DrawAction {
+  constructor(points, size) {
+    super(ACTION_CHOOSE_ADD, points, size);
   }
 }
-export class RubberAction extends Action {
-  constructor(points,size){
-    super(ACTION_RUBBER);
-    this.points = points;
-    this.size = size;
+export class DelAction extends DrawAction {
+  constructor(points, size) {
+    super(ACTION_CHOOSE_ADD, points, size);
   }
-  addPoint = (point) => {
-    this.points.push(point);
+}
+export class RubberAction extends DrawAction {
+  constructor(points, size) {
+    super(ACTION_RUBBER, points, size);
   }
 }

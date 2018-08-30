@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { Radio, Button } from 'antd';
 import PaintCanvas from "../PaintCanvas";
-import { ACTION_DRAG, ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER } from '../common/common'
+import { ACTION_DRAG, ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER } from '../../common/common'
 import { inject, observer } from "mobx-react";
 import './index.css'
 @inject('paintStore')
