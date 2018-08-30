@@ -80,6 +80,7 @@ export default class PaintStore {
       this.imgAction.y += vy;
       this.lastDragPoint = point;
     }
+    // console.log('onMouseMoveAtPoint',this.actions)
   }
   @action
   onMouseUp = () => {
