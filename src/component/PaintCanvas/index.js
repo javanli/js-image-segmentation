@@ -130,6 +130,8 @@ class PaintCanvas extends Component {
   };
   onMouseUp = () => {
     this.isMouseDown = false;
+    window.removeEventListener('mousemove', this.onMouseMove)
+    window.removeEventListener('mouseup', this.onMouseUp)
   };
   onMouseWheel = (e) => {
     let {paintStore} = this.props;
