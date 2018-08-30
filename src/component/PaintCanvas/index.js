@@ -14,10 +14,7 @@ class PaintCanvas extends Component {
   constructor(props) {
     super(props);
     this.bindEvent();
-  }
-  componentWillReceiveProps(nextProps) {
-    console.log('componentWillReceiveProps');
-    this.redraw();
+    window.requestAnimationFrame(this.redraw);
   }
   /**
    * 工具函数
@@ -57,15 +54,20 @@ class PaintCanvas extends Component {
   }
   redraw = () => {
     let { paintStore } = this.props;
-    this.clear();
-    if(paintStore.imgAction.img){
-      this.drawImg(paintStore.imgAction);
-    }
-    this.actions.forEach((action, idx) => {
-      if (idx <= this.currentActionIdx) {
-        this.applyAction(action);
+    if (paintStore.needRedraw) {
+      console.log('redraw',paintStore)
+      paintStore.onRedraw();
+      this.clear();
+      if (paintStore.imgAction.img) {
+        this.drawImg(paintStore.imgAction);
       }
-    });
+      paintStore.actions.forEach((action, idx) => {
+        if (idx <= paintStore.actionIndex) {
+          this.applyAction(action);
+        }
+      });
+    }
+    window.requestAnimationFrame(this.redraw);
   };
   applyAction = (action) => {
     let { paintStore } = this.props;
@@ -81,13 +83,15 @@ class PaintCanvas extends Component {
     else if (action.type === ACTION_CLEAR) {
       this.clear();
     }
-    
+
   }
   drawLine = (lineAction, color) => {
     if (!this.ctx) return;
+    let { paintStore } = this.props;
     let ctx = this.ctx;
     let { points, size } = lineAction;
-    ctx.lineWidth = size;
+    points = paintStore.points2realPoints(points);
+    ctx.lineWidth = size * paintStore.scale;
     ctx.strokeStyle = color;
     this.ctx.lineCap = "round";
     ctx.beginPath();
@@ -134,8 +138,8 @@ class PaintCanvas extends Component {
     window.removeEventListener('mouseup', this.onMouseUp)
   };
   onMouseWheel = (e) => {
-    let {paintStore} = this.props;
-    if(e.wheelDelta > 0){
+    let { paintStore } = this.props;
+    if (e.wheelDelta > 0) {
       paintStore.zoomIn();
     }
     else {
@@ -144,7 +148,7 @@ class PaintCanvas extends Component {
   }
   render() {
     let cursor = 'pointer'
-    let {paintStore} = this.props;
+    let { paintStore } = this.props;
     if (paintStore.type === ACTION_CHOOSE_ADD || paintStore.type === ACTION_CHOOSE_DEL) {
       cursor = 'url(./pencil.png),auto';
     }

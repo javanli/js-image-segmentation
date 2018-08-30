@@ -11,19 +11,19 @@ class PaintApp extends Component {
     let { paintStore } = this.props;
     return (
       <div className="paint-app">
-        <Radio.Group>
+        <Radio.Group value={paintStore.type} onChange={(e) => {paintStore.setActionType(e.target.value)}}>
           <Radio.Button
             className="tool-item"
-            style={{ width: 20, backgroundColor: '#0f0' }}
-            onClick={() => { paintStore.setActionType(ACTION_CHOOSE_ADD) }}
+            style={{ backgroundColor: '#0f0' }}
+            value={ACTION_CHOOSE_ADD}
           ></Radio.Button>
           <Radio.Button
             className="tool-item"
-            style={{ width: 20, backgroundColor: '#f00' }}
-            onClick={() => { paintStore.setActionType(ACTION_CHOOSE_DEL) }}
+            style={{ backgroundColor: '#f00' }}
+            value={ACTION_CHOOSE_DEL}
           ></Radio.Button>
-          <Radio.Button className="tool-item" onClick={() => { paintStore.setActionType(ACTION_RUBBER) }}>橡皮</Radio.Button>
-          <Radio.Button className="tool-item" onClick={() => { paintStore.setActionType(ACTION_DRAG) }}>拖拽</Radio.Button>
+          <Radio.Button className="tool-item" value={ACTION_RUBBER}>橡皮</Radio.Button>
+          <Radio.Button className="tool-item" value={ACTION_DRAG}>拖拽</Radio.Button>
         </Radio.Group>
         <Button.Group>
           <Button className="tool-item" onClick={() => { paintStore.redo() }}>前进</Button>
