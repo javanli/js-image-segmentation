@@ -1,10 +1,11 @@
+import { message } from 'antd';
 import { observable, action, computed } from 'mobx'
 import { ACTION_DRAG, ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER, ClearAction, AddAction, DelAction, RubberAction, DrawAction } from '../common/common'
 export default class PaintStore {
   @observable type = ACTION_CHOOSE_ADD;
   @observable brushSize = 10;
-  @observable addColor = '#0f05';
-  @observable delColor = '#f005';
+  @observable addColor = '#0f0';
+  @observable delColor = '#f00';
   @observable rubberSize = 12;
   @observable imgAction = {};
   @observable actions = [];
@@ -20,20 +21,20 @@ export default class PaintStore {
     return this.actionIndex < this.actions.length - 1;
   }
   @computed get scale() {
-    if(this.imgAction.img){
+    if (this.imgAction.img) {
       return this.imgAction.width / this.imgAction.img.width;
     }
     return 1;
   }
   point2relativePoint = (point) => {
-    let x = (point.x - this.imgAction.x)/this.imgAction.width;
-    let y = (point.y - this.imgAction.y)/this.imgAction.height;
-    return {x,y};
+    let x = (point.x - this.imgAction.x) / this.imgAction.width;
+    let y = (point.y - this.imgAction.y) / this.imgAction.height;
+    return { x, y };
   }
   point2realPoint = (point) => {
-    let x = Math.floor(this.imgAction.x + point.x * this.imgAction.width);
-    let y = Math.floor(this.imgAction.y + point.y * this.imgAction.height);
-    return {x,y}
+    let x = Math.floor(point.x * this.imgAction.width);
+    let y = Math.floor(point.y * this.imgAction.height);
+    return { x, y }
   }
   points2realPoints = (points) => {
     return points.map(this.point2realPoint)
@@ -66,8 +67,22 @@ export default class PaintStore {
     this.needRedraw = true;
   }
   @action
-  onRedraw = () => {
-    this.needRedraw = false;
+  zoomIn = () => {
+    this.imgAction.width *= 1.1;
+    this.imgAction.height *= 1.1;
+    this.needRedraw = true;
+  }
+  @action
+  zoomOut = () => {
+    this.imgAction.width *= 0.9;
+    this.imgAction.height *= 0.9;
+    this.needRedraw = true;
+  }
+  @action
+  resetImgSize = () => {
+    this.imgAction.width = this.imgAction.img.width;
+    this.imgAction.height = this.imgAction.img.height;
+    this.needRedraw = true;
   }
   @action
   insertImg = (img) => {
@@ -78,10 +93,41 @@ export default class PaintStore {
       width: img.width,
       height: img.height
     }
+    this.actions = []
+    this.actionIndex = -1;
     this.needRedraw = true;
   }
   @action
+  onRedraw = () => {
+    this.needRedraw = false;
+  }
+  @action
+  sizeUp = () => {
+    if (this.type === ACTION_CHOOSE_ADD || this.type === ACTION_CHOOSE_DEL) {
+      this.brushSize++;
+    }
+    else if (this.type === ACTION_RUBBER) {
+      this.rubberSize++;
+    }
+  }
+  @action
+  sizeDown = () => {
+    if (this.type === ACTION_CHOOSE_ADD || this.type === ACTION_CHOOSE_DEL) {
+      if (this.brushSize > 1) {
+        this.brushSize--;
+      }
+    }
+    else if (this.type === ACTION_RUBBER) {
+      if (this.rubberSize > 1) {
+        this.rubberSize--;
+      }
+    }
+  }
+  @action
   onMouseDownAtPoint = (point) => {
+    if (!this.imgAction.img) {
+      message.error('请先插入图片', 1);
+    }
     let relativePoint = this.point2relativePoint(point);
     this.isMouseDown = true;
     if (this.canRedo) {
@@ -120,17 +166,5 @@ export default class PaintStore {
   @action
   onMouseUp = () => {
     this.isMouseDown = false;
-  }
-  @action
-  zoomIn = () => {
-    this.imgAction.width *= 1.1;
-    this.imgAction.height *= 1.1;
-    this.needRedraw = true;
-  }
-  @action
-  zoomOut = () => {
-    this.imgAction.width *= 0.9;
-    this.imgAction.height *= 0.9;
-    this.needRedraw = true;
   }
 }

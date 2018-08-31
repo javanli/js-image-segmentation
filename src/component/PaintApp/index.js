@@ -11,7 +11,7 @@ class PaintApp extends Component {
     let { paintStore } = this.props;
     return (
       <div className="paint-app">
-        <Radio.Group value={paintStore.type} onChange={(e) => {paintStore.setActionType(e.target.value)}}>
+        <Radio.Group value={paintStore.type} onChange={(e) => { paintStore.setActionType(e.target.value) }}>
           <Radio.Button
             className="tool-item"
             style={{ backgroundColor: '#0f0' }}
@@ -31,35 +31,21 @@ class PaintApp extends Component {
           <Button className="tool-item" onClick={() => { paintStore.clear() }}>清除</Button>
         </Button.Group>
         <Button.Group>
-          <Button>放大</Button>
-          <Button>缩小</Button>
-          <Button>最佳比例</Button>
+          <Button onClick={() => { paintStore.zoomIn() }}>放大</Button>
+          <Button onClick={() => { paintStore.zoomOut() }}>缩小</Button>
+          <Button onClick={() => { paintStore.resetImgSize() }}>最佳比例</Button>
+        </Button.Group>
+        <Button.Group>
+          <Button
+            className="tool-item"
+            onClick={paintStore.sizeUp}
+          >+</Button>
+          <Button
+            className="tool-item"
+            onClick={paintStore.sizeDown}
+          >-</Button>
         </Button.Group>
         <div className="tool-bar">
-          <button
-            className="tool-item"
-            style={{ width: 20 }}
-            onClick={() => {
-              if (this.state.type === 'ACTION_LINE') {
-                this.setState({ brushSize: this.state.brushSize + 1 })
-              }
-              else if (this.state.type === 'ACTION_RUBBER') {
-                this.setState({ rubberSize: this.state.rubberSize + 1 })
-              }
-            }}
-          >+</button>
-          <button
-            className="tool-item"
-            style={{ width: 20 }}
-            onClick={() => {
-              if (this.state.type === 'ACTION_LINE') {
-                this.setState({ brushSize: this.state.brushSize - 1 })
-              }
-              else if (this.state.type === 'ACTION_RUBBER') {
-                this.setState({ rubberSize: this.state.rubberSize - 1 })
-              }
-            }}
-          >-</button>
 
           <input className="tool-item" type="file" style={{ width: 200 }}
             onChange={(e) => {

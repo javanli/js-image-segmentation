@@ -15,6 +15,8 @@ class PaintCanvas extends Component {
     super(props);
     this.bindEvent();
     window.requestAnimationFrame(this.redraw);
+    this.offscreenCanvas = document.createElement("canvas");
+    this.offscreenCtx = this.offscreenCanvas.getContext('2d');
   }
   /**
    * 工具函数
@@ -51,21 +53,26 @@ class PaintCanvas extends Component {
     if (this.ctx2) {
       this.ctx2.clearRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
     }
+    this.offscreenCtx.clearRect(0,0,this.offscreenCanvas.width,this.offscreenCanvas.height);
   }
   redraw = () => {
     let { paintStore } = this.props;
-    if (paintStore.needRedraw) {
+    if (paintStore.needRedraw && paintStore.imgAction.img) {
       console.log('redraw',paintStore)
       paintStore.onRedraw();
       this.clear();
-      if (paintStore.imgAction.img) {
-        this.drawImg(paintStore.imgAction);
-      }
+      this.drawImg(paintStore.imgAction);
+      this.offscreenCanvas.width = paintStore.imgAction.width;
+      this.offscreenCanvas.height = paintStore.imgAction.height;
       paintStore.actions.forEach((action, idx) => {
         if (idx <= paintStore.actionIndex) {
           this.applyAction(action);
         }
       });
+      let { img, x, y, width, height } = paintStore.imgAction;
+      this.ctx.globalAlpha = 0.4;
+      this.ctx.drawImage(this.offscreenCanvas,x,y,width,height);
+      this.ctx.globalAlpha = 1.0;
     }
     window.requestAnimationFrame(this.redraw);
   };
@@ -78,22 +85,23 @@ class PaintCanvas extends Component {
       this.drawLine(action, paintStore.delColor);
     }
     else if (action.type === ACTION_RUBBER) {
+      this.offscreenCtx.globalCompositeOperation = "destination-out";
       this.drawLine(action, '#fff');
+      this.offscreenCtx.globalCompositeOperation = "source-over";
     }
     else if (action.type === ACTION_CLEAR) {
-      this.clear();
+      this.offscreenCtx.clearRect(0,0,this.offscreenCanvas.width,this.offscreenCanvas.height);
     }
 
   }
   drawLine = (lineAction, color) => {
-    if (!this.ctx) return;
     let { paintStore } = this.props;
-    let ctx = this.ctx;
+    let ctx = this.offscreenCtx;
     let { points, size } = lineAction;
     points = paintStore.points2realPoints(points);
     ctx.lineWidth = size * paintStore.scale;
     ctx.strokeStyle = color;
-    this.ctx.lineCap = "round";
+    ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
     var prev = points[0],
