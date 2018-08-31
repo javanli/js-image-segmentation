@@ -6,8 +6,6 @@ import { ACTION_CLEAR } from "../../common/common";
 @observer
 class PaintCanvas extends Component {
   static defaultProps = {
-    canvasWidth: 400,
-    canvasHeight: 400,
     disabled: false
   };
 
@@ -173,7 +171,6 @@ class PaintCanvas extends Component {
           height={this.props.canvasHeight}
           style={{
             display: "block",
-            background: "#fff",
             touchAction: "none",
             cursor: cursor
           }}
@@ -189,12 +186,12 @@ class PaintCanvas extends Component {
           onTouchEnd={this.onMouseUp}
           onTouchCancel={this.onMouseUp}
         />
+        <div className="middle-line"></div>
         <canvas
           width={this.props.canvasWidth}
           height={this.props.canvasHeight}
           style={{
             display: "block",
-            background: "#fff",
             touchAction: "none"
           }}
           ref={canvas => {

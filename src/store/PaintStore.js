@@ -14,6 +14,11 @@ export default class PaintStore {
   @observable isMouseDown = false;
   @observable lastDragPoint = null;
   @observable needRedraw = false;
+  @observable windowSize = { x: 0, y: 0 };
+  constructor() {
+    window.onresize = this.updateWindowSize;
+    window.onload = this.updateWindowSize;
+  }
   @computed get canUndo() {
     return this.actionIndex > 0
   }
@@ -38,6 +43,13 @@ export default class PaintStore {
   }
   points2realPoints = (points) => {
     return points.map(this.point2realPoint)
+  }
+  @action
+  updateWindowSize = () => {
+    let x = window.innerWidth;
+    let y = window.innerHeight;
+    this.windowSize = { x, y };
+    this.needRedraw = true;
   }
   @action
   setActionType = (actionType) => {
