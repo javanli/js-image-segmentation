@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Radio, Button, Modal, Upload, Icon, message, Row, Col, Slider, InputNumber } from 'antd';
+import { Radio, Button, Modal, Upload, Icon, message, Row, Col, Slider, InputNumber, Tooltip } from 'antd';
 import PaintCanvas from "../PaintCanvas";
 import { ACTION_DRAG, ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER } from '../../common/common'
 import { inject, observer } from "mobx-react";
@@ -73,25 +73,16 @@ class PaintApp extends Component {
       }
     }
     let slider = (isShowSizeSlider ?
-      <div className="slider-wrapper" style={{height:size+4}}>
+      <div className="slider-wrapper" style={{ height: size + 4 }}>
         <div className="indicator-wrapper">
           <div className="indicator" style={style}></div>
         </div>
-        <Slider min={1} max={40} onChange={(value) => { console.log(value); paintStore.setSize(value); }} value={size} />
-        {/* size:
-        <InputNumber
-          min={1}
-          max={20}
-          value={size}
-          onChange={()=>{}}
-        /> */}
+        <Slider min={1} max={30} onChange={(value) => { console.log(value); paintStore.setSize(value); }} value={size} />
       </div> : null);
     return slider;
   }
   render() {
     let { paintStore } = this.props;
-    let canvasWidth = Math.floor(paintStore.windowSize.x / 2) - 1;
-    let canvasHeight = paintStore.windowSize.y;
     let slider = this.getSlider();
     return (
       <div className="paint-app">
@@ -104,53 +95,64 @@ class PaintApp extends Component {
             className="tool-group"
             value={paintStore.type}
             onChange={(e) => { paintStore.setActionType(e.target.value) }}>
-            <Radio.Button
-              className="tool-item"
-              style={{ background: "white url(/add.png) no-repeat center center" }}
-              value={ACTION_CHOOSE_ADD}
-            ></Radio.Button>
-            <Radio.Button
-              className="tool-item"
-              style={{ background: "white url(/minus.png) no-repeat center center" }}
-              value={ACTION_CHOOSE_DEL}
-            ></Radio.Button>
-            <Radio.Button
-              className="tool-item"
-              style={{ background: "white url(/rubber.png) no-repeat center center" }}
-              value={ACTION_RUBBER}></Radio.Button>
-            <Radio.Button
-              className="tool-item"
-              style={{ background: "white url(/hand.png) no-repeat center center" }}
-              value={ACTION_DRAG}></Radio.Button>
+            <Tooltip placement="bottom" title="绿色画笔">
+              <Radio.Button
+                className="tool-item"
+                style={{ background: "white url(/add.png) no-repeat center center" }}
+                value={ACTION_CHOOSE_ADD}
+              ></Radio.Button>
+            </Tooltip>
+            <Tooltip placement="bottom" title="红色画笔">
+              <Radio.Button
+                className="tool-item"
+                style={{ background: "white url(/minus.png) no-repeat center center" }}
+                value={ACTION_CHOOSE_DEL}
+              ></Radio.Button>
+            </Tooltip>
+            <Tooltip placement="bottom" title="橡皮">
+              <Radio.Button
+                className="tool-item"
+                style={{ background: "white url(/rubber.png) no-repeat center center" }}
+                value={ACTION_RUBBER}></Radio.Button></Tooltip>
+            <Tooltip placement="bottom" title="拖拽">
+              <Radio.Button
+                className="tool-item"
+                style={{ background: "white url(/hand.png) no-repeat center center" }}
+                value={ACTION_DRAG}></Radio.Button>
+            </Tooltip>
           </Radio.Group>
           <Button.Group className="tool-group">
-            <Button
-              className="tool-item"
-              disabled={!paintStore.canUndo}
-              onClick={() => { paintStore.undo() }}>
-              <div className="icon" style={{ background: "url(/backward.png) no-repeat center center transparent" }}></div></Button>
-            <Button
-              className="tool-item"
-              disabled={!paintStore.canRedo}
-              onClick={() => { paintStore.redo() }}>
-              <div className="icon" style={{ background: "url(/forward.png) no-repeat center center transparent" }}></div></Button>
-            <Button
-              className="tool-item"
-              style={{ background: "white url(/clear.png) no-repeat center center" }}
-              onClick={() => { paintStore.clear() }}></Button>
+            <Tooltip placement="bottom" title="后退">
+              <Button
+                className="tool-item"
+                disabled={!paintStore.canUndo}
+                onClick={() => { paintStore.undo() }}>
+                <div className="icon" style={{ background: "url(/backward.png) no-repeat center center transparent" }}></div></Button>
+            </Tooltip>
+            <Tooltip placement="bottom" title="前进">
+              <Button
+                className="tool-item"
+                disabled={!paintStore.canRedo}
+                onClick={() => { paintStore.redo() }}>
+                <div className="icon" style={{ background: "url(/forward.png) no-repeat center center transparent" }}></div></Button></Tooltip>
+            <Tooltip placement="bottom" title="清除">
+              <Button
+                className="tool-item"
+                style={{ background: "white url(/clear.png) no-repeat center center" }}
+                onClick={() => { paintStore.clear() }}></Button></Tooltip>
           </Button.Group>
           <Button.Group className="tool-group">
-            <Button style={{ background: "white url(/zoomin.png) no-repeat center center" }} onClick={() => { paintStore.zoomIn() }}></Button>
-            <Button style={{ background: "white url(/zoomout.png) no-repeat center center" }} onClick={() => { paintStore.zoomOut() }}></Button>
-            <Button style={{ background: "white url(/fit.png) no-repeat center center" }} onClick={() => { paintStore.resetImgSize() }}></Button>
+            <Tooltip placement="bottom" title="放大">
+              <Button style={{ background: "white url(/zoomin.png) no-repeat center center" }} onClick={() => { paintStore.zoomIn() }}></Button></Tooltip>
+            <Tooltip placement="bottom" title="缩小">
+              <Button style={{ background: "white url(/zoomout.png) no-repeat center center" }} onClick={() => { paintStore.zoomOut() }}></Button></Tooltip>
+            <Tooltip placement="bottom" title="最佳比例">
+              <Button style={{ background: "white url(/fit.png) no-repeat center center" }} onClick={() => { paintStore.resetImgSize() }}></Button></Tooltip>
           </Button.Group>
-          {slider}
         </div>
+        {slider}
         <div className="paint-canvas-wrapper">
-          <PaintCanvas
-            canvasWidth={canvasWidth}
-            canvasHeight={canvasHeight}
-          ></PaintCanvas>
+          <PaintCanvas></PaintCanvas>
         </div>
         <Modal
           title="选择图片"
@@ -180,7 +182,7 @@ class PaintApp extends Component {
             accept="image/*"
             beforeUpload={this.handleImgUpload}
             fileList={null}>
-            <Button type="primary">
+            <Button type="primary" style={{marginTop:20}}>
               <Icon type="upload" /> 选择
             </Button>
           </Upload>

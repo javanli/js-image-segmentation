@@ -45,11 +45,12 @@ class PaintCanvas extends Component {
    * 绘制相关
    */
   clear = () => {
+    let { paintStore } = this.props;
     if (this.ctx) {
-      this.ctx.clearRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
+      this.ctx.clearRect(0, 0, paintStore.canvasWidth, paintStore.canvasHeight);
     }
-    if (this.ctx2) {
-      this.ctx2.clearRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
+    if (paintStore.split && this.ctx2) {
+      this.ctx2.clearRect(0, 0, paintStore.canvasWidth, paintStore.canvasHeight);
     }
     this.offscreenCtx.clearRect(0,0,this.offscreenCanvas.width,this.offscreenCanvas.height);
   }
@@ -126,7 +127,9 @@ class PaintCanvas extends Component {
     let { img, width, height } = imgAction;
     let {x,y} = this.props.paintStore.getImgOrigin();
     this.ctx.drawImage(img, x, y, width, height);
-    this.ctx2.drawImage(img, x, y, width, height);
+    if(this.props.paintStore.split){
+      this.ctx2.drawImage(img, x, y, width, height);
+    }
   }
   onMouseDown = e => {
     let point = this.getMousePos(e);
@@ -157,8 +160,11 @@ class PaintCanvas extends Component {
   render() {
     let cursor = 'pointer'
     let { paintStore } = this.props;
-    if (paintStore.type === ACTION_CHOOSE_ADD || paintStore.type === ACTION_CHOOSE_DEL) {
-      cursor = 'url(./pencil.png),auto';
+    if (paintStore.type === ACTION_CHOOSE_ADD) {
+      cursor = 'url(./add.png),auto';
+    }
+    else if (paintStore.type === ACTION_CHOOSE_DEL) {
+      cursor = 'url(./minus.png),auto';
     }
     else if (paintStore.type === ACTION_RUBBER) {
       cursor = 'url(./rubber.png),auto';
@@ -169,8 +175,8 @@ class PaintCanvas extends Component {
     return (
       <div className="paint-canvas-wrapper">
         <canvas
-          width={this.props.canvasWidth}
-          height={this.props.canvasHeight}
+          width={paintStore.canvasWidth}
+          height={paintStore.canvasHeight}
           style={{
             display: "block",
             touchAction: "none",
@@ -188,10 +194,10 @@ class PaintCanvas extends Component {
           onTouchEnd={this.onMouseUp}
           onTouchCancel={this.onMouseUp}
         />
-        <div className="middle-line"></div>
-        <canvas
-          width={this.props.canvasWidth}
-          height={this.props.canvasHeight}
+        {paintStore.split && <div className="middle-line"></div>}
+        {paintStore.split && <canvas
+          width={paintStore.canvasWidth}
+          height={paintStore.canvasHeight}
           style={{
             display: "block",
             touchAction: "none"
@@ -200,7 +206,7 @@ class PaintCanvas extends Component {
             if (canvas) {
               this.ctx2 = canvas.getContext("2d");
             }
-          }}></canvas>
+          }}></canvas>}
       </div>
     );
   }

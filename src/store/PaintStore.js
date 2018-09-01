@@ -15,6 +15,7 @@ export default class PaintStore {
   @observable isMouseDown = false; // 鼠标按下态
   @observable lastDragPoint = null; // 拖拽相关
   @observable needRedraw = false; // 是否需要重绘
+  @observable split = false; // 是否拆分成两栏
 
   // UI相关
   @observable windowSize = { x: 0, y: 0 };
@@ -23,6 +24,7 @@ export default class PaintStore {
   updateWindowSize = () => {
     let x = window.innerWidth;
     let y = window.innerHeight;
+    this.split = x > 700;
     this.windowSize = { x, y };
     this.needRedraw = true;
   }
@@ -47,7 +49,7 @@ export default class PaintStore {
     return 1;
   }
   @computed get canvasWidth() {
-    return Math.floor(this.windowSize.x / 2) - 1;
+    return this.split ? Math.floor(this.windowSize.x / 2) - 1 : this.windowSize.x;
   }
   @computed get canvasHeight() {
     return this.windowSize.y;

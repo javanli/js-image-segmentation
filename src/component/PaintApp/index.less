@@ -1,11 +1,32 @@
+@media (max-width: 700px) {
+  .slider-wrapper {
+    position: absolute;
+    left: 5px;
+    bottom: 5px;
+    // width: 170px;
+  }
+}
+@media (min-width: 700px) {
+  .slider-wrapper {
+    position: absolute;
+    left: 475px;
+    top: 5px;
+  }
+}
+#root {
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+}
+
 .paint-app {
+  overflow: hidden;
   .tool-bar {
     display: flex;
     justify-content: center;
     align-items: center;
     position: absolute;
-    // width: 100%;
-    // overflow: hidden;
     left: 5px;
     top: 5px;
     height: 32px;
@@ -23,32 +44,30 @@
         }
       }
     }
-    .slider-wrapper {
-      margin-left: 20px;
-      background-color: white;
+  }
+  .slider-wrapper {
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 30px;
+    border: 1px solid #D9D9D9;
+    border-radius: 4px;
+    min-height: 32px;
+    .indicator-wrapper {
+      margin: 0 10px;
+      width: 40px;
       display: flex;
-      align-items: center;
       justify-content: center;
-      line-height: 30px;
-      border: 1px solid #D9D9D9;
-      border-radius: 4px;
-      min-height: 32px;
-
-      .indicator-wrapper {
-        margin:0 10px;
-        width: 40px;
-        display: flex;
-        justify-content: center;
-      }
-      .ant-slider {
-        width: 100px;
-        margin: 0 10px 0 0;
-      }
-      .ant-input-number {
-        margin-left: 10px;
-        width: 50px;
-        border: 0;
-      }
+    }
+    .ant-slider {
+      width: 100px;
+      margin: 0 10px 0 0;
+    }
+    .ant-input-number {
+      margin-left: 10px;
+      width: 50px;
+      border: 0;
     }
   }
   .paint-canvas-wrapper {
@@ -61,5 +80,4 @@
       background-color: gray;
     }
   }
-  .paint-canvas-wrapper canvas {}
 }
