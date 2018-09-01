@@ -126,12 +126,14 @@ class PaintApp extends Component {
           <Button.Group className="tool-group">
             <Button
               className="tool-item"
-              style={{ background: "white url(/backward.png) no-repeat center center" }}
-              onClick={() => { paintStore.undo() }}></Button>
+              disabled={!paintStore.canUndo}
+              onClick={() => { paintStore.undo() }}>
+              <div className="icon" style={{ background: "url(/backward.png) no-repeat center center transparent" }}></div></Button>
             <Button
               className="tool-item"
-              style={{ background: "white url(/forward.png) no-repeat center center" }}
-              onClick={() => { paintStore.redo() }}></Button>
+              disabled={!paintStore.canRedo}
+              onClick={() => { paintStore.redo() }}>
+              <div className="icon" style={{ background: "url(/forward.png) no-repeat center center transparent" }}></div></Button>
             <Button
               className="tool-item"
               style={{ background: "white url(/clear.png) no-repeat center center" }}
