@@ -67,7 +67,8 @@ class PaintCanvas extends Component {
           this.applyAction(action);
         }
       });
-      let { img, x, y, width, height } = paintStore.imgAction;
+      let {width, height } = paintStore.imgAction;
+      let {x,y} = paintStore.getImgOrigin();
       this.ctx.globalAlpha = 0.4;
       this.ctx.drawImage(this.offscreenCanvas,x,y,width,height);
       this.ctx.globalAlpha = 1.0;
@@ -96,7 +97,7 @@ class PaintCanvas extends Component {
     let { paintStore } = this.props;
     let ctx = this.offscreenCtx;
     let { points, size } = lineAction;
-    points = paintStore.points2realPoints(points);
+    points = paintStore.points2imgPoints(points);
     ctx.lineWidth = size * paintStore.scale;
     ctx.strokeStyle = color;
     ctx.lineCap = "round";
@@ -122,7 +123,8 @@ class PaintCanvas extends Component {
   }
   drawImg = (imgAction) => {
     if (!this.ctx) return;
-    let { img, x, y, width, height } = imgAction;
+    let { img, width, height } = imgAction;
+    let {x,y} = this.props.paintStore.getImgOrigin();
     this.ctx.drawImage(img, x, y, width, height);
     this.ctx2.drawImage(img, x, y, width, height);
   }

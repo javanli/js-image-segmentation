@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Radio, Button } from 'antd';
+import { Radio, Button, Modal, Upload, Icon, message, Row, Col, Slider, InputNumber } from 'antd';
 import PaintCanvas from "../PaintCanvas";
 import { ACTION_DRAG, ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER } from '../../common/common'
 import { inject, observer } from "mobx-react";
@@ -7,60 +7,142 @@ import './index.less'
 @inject('paintStore')
 @observer
 class PaintApp extends Component {
+  handleImgUpload = (file) => {
+    let { paintStore } = this.props;
+    if (paintStore.imgAction.img) {
+      Modal.confirm({
+        onOk: () => {
+          this.useImgFile(file);
+        },
+        title: '提示',
+        content: '插入新图片将会清空当前内容，是否确认？',
+        okText: '确认',
+        cancelText: '取消'
+      })
+    }
+    else {
+      this.useImgFile(file);
+    }
+    return false;
+  }
+  useImgFile = (file) => {
+    let { paintStore } = this.props;
+    let reader = new FileReader();
+    reader.readAsDataURL(file)
+    reader.onload = () => {
+      let img = new Image();
+      img.src = reader.result;
+      img.onload = () => {
+        paintStore.insertImg(img);
+        paintStore.setShowUploadModal(false);
+        paintStore.setActionType(ACTION_DRAG);
+      }
+      img.onerror = () => {
+        message.error('请选择图片文件！', 1);
+      }
+    }
+  }
+  getSlider = () => {
+    let { paintStore } = this.props;
+    let isShowSizeSlider = paintStore.type === ACTION_CHOOSE_ADD || paintStore.type === ACTION_CHOOSE_DEL || paintStore.type === ACTION_RUBBER;
+    let style, size;
+    if (paintStore.type === ACTION_CHOOSE_ADD) {
+      size = paintStore.brushSize;
+      style = {
+        width: size,
+        height: size,
+        backgroundColor: paintStore.addColor,
+        borderRadius: size / 2
+      }
+    }
+    else if (paintStore.type === ACTION_CHOOSE_DEL) {
+      size = paintStore.brushSize;
+      style = {
+        width: size,
+        height: size,
+        backgroundColor: paintStore.delColor,
+        borderRadius: size / 2
+      }
+    }
+    else if (paintStore.type === ACTION_RUBBER) {
+      size = paintStore.rubberSize;
+      style = {
+        width: size,
+        height: size,
+        border: '1px solid black'
+      }
+    }
+    let slider = (isShowSizeSlider ?
+      <div className="slider-wrapper" style={{height:size+4}}>
+        <div className="indicator-wrapper">
+          <div className="indicator" style={style}></div>
+        </div>
+        <Slider min={1} max={40} onChange={(value) => { console.log(value); paintStore.setSize(value); }} value={size} />
+        {/* size:
+        <InputNumber
+          min={1}
+          max={20}
+          value={size}
+          onChange={()=>{}}
+        /> */}
+      </div> : null);
+    return slider;
+  }
   render() {
     let { paintStore } = this.props;
     let canvasWidth = Math.floor(paintStore.windowSize.x / 2) - 1;
     let canvasHeight = paintStore.windowSize.y;
+    let slider = this.getSlider();
     return (
       <div className="paint-app">
         <div className="tool-bar">
-          <Radio.Group value={paintStore.type} onChange={(e) => { paintStore.setActionType(e.target.value) }}>
+          <Button
+            type="primary"
+            onClick={() => { paintStore.setShowUploadModal(true) }}>
+            <Icon type="upload" />导入</Button>
+          <Radio.Group
+            className="tool-group"
+            value={paintStore.type}
+            onChange={(e) => { paintStore.setActionType(e.target.value) }}>
             <Radio.Button
               className="tool-item"
-              style={{ backgroundColor: '#0f0' }}
+              style={{ background: "white url(/add.png) no-repeat center center" }}
               value={ACTION_CHOOSE_ADD}
             ></Radio.Button>
             <Radio.Button
               className="tool-item"
-              style={{ backgroundColor: '#f00' }}
+              style={{ background: "white url(/minus.png) no-repeat center center" }}
               value={ACTION_CHOOSE_DEL}
             ></Radio.Button>
-            <Radio.Button className="tool-item" value={ACTION_RUBBER}>橡皮</Radio.Button>
-            <Radio.Button className="tool-item" value={ACTION_DRAG}>拖拽</Radio.Button>
+            <Radio.Button
+              className="tool-item"
+              style={{ background: "white url(/rubber.png) no-repeat center center" }}
+              value={ACTION_RUBBER}></Radio.Button>
+            <Radio.Button
+              className="tool-item"
+              style={{ background: "white url(/hand.png) no-repeat center center" }}
+              value={ACTION_DRAG}></Radio.Button>
           </Radio.Group>
-          <Button.Group>
-            <Button className="tool-item" onClick={() => { paintStore.redo() }}>前进</Button>
-            <Button className="tool-item" onClick={() => { paintStore.undo() }}>后退</Button>
-            <Button className="tool-item" onClick={() => { paintStore.clear() }}>清除</Button>
-          </Button.Group>
-          <Button.Group>
-            <Button onClick={() => { paintStore.zoomIn() }}>放大</Button>
-            <Button onClick={() => { paintStore.zoomOut() }}>缩小</Button>
-            <Button onClick={() => { paintStore.resetImgSize() }}>最佳比例</Button>
-          </Button.Group>
-          <Button.Group>
+          <Button.Group className="tool-group">
             <Button
               className="tool-item"
-              onClick={paintStore.sizeUp}
-            >+</Button>
+              style={{ background: "white url(/backward.png) no-repeat center center" }}
+              onClick={() => { paintStore.undo() }}></Button>
             <Button
               className="tool-item"
-              onClick={paintStore.sizeDown}
-            >-</Button>
+              style={{ background: "white url(/forward.png) no-repeat center center" }}
+              onClick={() => { paintStore.redo() }}></Button>
+            <Button
+              className="tool-item"
+              style={{ background: "white url(/clear.png) no-repeat center center" }}
+              onClick={() => { paintStore.clear() }}></Button>
           </Button.Group>
-          <input className="tool-item" type="file" style={{ width: 200 }}
-            onChange={(e) => {
-              let files = e.target.files;
-              let reader = new FileReader();
-              reader.readAsDataURL(files[0])
-              reader.onload = () => {
-                let img = new Image();
-                img.src = reader.result;
-                img.onload = () => {
-                  paintStore.insertImg(img);
-                }
-              }
-            }} />
+          <Button.Group className="tool-group">
+            <Button style={{ background: "white url(/zoomin.png) no-repeat center center" }} onClick={() => { paintStore.zoomIn() }}></Button>
+            <Button style={{ background: "white url(/zoomout.png) no-repeat center center" }} onClick={() => { paintStore.zoomOut() }}></Button>
+            <Button style={{ background: "white url(/fit.png) no-repeat center center" }} onClick={() => { paintStore.resetImgSize() }}></Button>
+          </Button.Group>
+          {slider}
         </div>
         <div className="paint-canvas-wrapper">
           <PaintCanvas
@@ -68,6 +150,39 @@ class PaintApp extends Component {
             canvasHeight={canvasHeight}
           ></PaintCanvas>
         </div>
+        <Modal
+          title="选择图片"
+          visible={paintStore.showUploadModal}
+          footer={null}
+          onOk={() => {
+            paintStore.setShowUploadModal(false);
+          }}
+          onCancel={() => {
+            paintStore.setShowUploadModal(false);
+          }}
+        >
+          <Upload.Dragger
+            name='file'
+            multiple={false}
+            accept="image/*"
+            beforeUpload={this.handleImgUpload}
+            fileList={null}>
+            <p className="ant-upload-drag-icon">
+              <Icon type="inbox" />
+            </p>
+            <p className="ant-upload-text">拖拽文件到这里</p>
+          </Upload.Dragger>
+          <Upload
+            name='file'
+            multiple={false}
+            accept="image/*"
+            beforeUpload={this.handleImgUpload}
+            fileList={null}>
+            <Button type="primary">
+              <Icon type="upload" /> 选择
+            </Button>
+          </Upload>
+        </Modal>
       </div>
     );
   }
