@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Radio, Button, Modal, Upload, Icon, message, Row, Col, Slider, InputNumber, Tooltip } from 'antd';
+import { Radio, Button, Modal, Upload, Icon, message, Slider, Tooltip } from 'antd';
 import PaintCanvas from "../PaintCanvas";
 import { ACTION_DRAG, ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER } from '../../common/common'
 import { inject, observer } from "mobx-react";
@@ -97,27 +97,23 @@ class PaintApp extends Component {
             onChange={(e) => { paintStore.setActionType(e.target.value) }}>
             <Tooltip placement="bottom" title="绿色画笔">
               <Radio.Button
-                className="tool-item"
-                style={{ background: "white url(/add.png) no-repeat center center" }}
+                className="tool-item add"
                 value={ACTION_CHOOSE_ADD}
               ></Radio.Button>
             </Tooltip>
             <Tooltip placement="bottom" title="红色画笔">
               <Radio.Button
-                className="tool-item"
-                style={{ background: "white url(/minus.png) no-repeat center center" }}
+                className="tool-item minus"
                 value={ACTION_CHOOSE_DEL}
               ></Radio.Button>
             </Tooltip>
             <Tooltip placement="bottom" title="橡皮">
               <Radio.Button
-                className="tool-item"
-                style={{ background: "white url(/rubber.png) no-repeat center center" }}
+                className="tool-item rubber"
                 value={ACTION_RUBBER}></Radio.Button></Tooltip>
             <Tooltip placement="bottom" title="拖拽">
               <Radio.Button
-                className="tool-item"
-                style={{ background: "white url(/hand.png) no-repeat center center" }}
+                className="tool-item hand"
                 value={ACTION_DRAG}></Radio.Button>
             </Tooltip>
           </Radio.Group>
@@ -127,33 +123,30 @@ class PaintApp extends Component {
                 className="tool-item"
                 disabled={!paintStore.canUndo}
                 onClick={() => { paintStore.undo() }}>
-                <div className="icon" style={{ background: "url(/backward.png) no-repeat center center transparent" }}></div></Button>
+                <div className="icon backward"></div></Button>
             </Tooltip>
             <Tooltip placement="bottom" title="前进">
               <Button
                 className="tool-item"
                 disabled={!paintStore.canRedo}
                 onClick={() => { paintStore.redo() }}>
-                <div className="icon" style={{ background: "url(/forward.png) no-repeat center center transparent" }}></div></Button></Tooltip>
+                <div className="icon forward"></div></Button></Tooltip>
             <Tooltip placement="bottom" title="清除">
               <Button
-                className="tool-item"
-                style={{ background: "white url(/clear.png) no-repeat center center" }}
+                className="tool-item clear"
                 onClick={() => { paintStore.clear() }}></Button></Tooltip>
           </Button.Group>
-          <Button.Group className="tool-group">
+          <Button.Group className="tool-group" id="size-control">
             <Tooltip placement="bottom" title="放大">
-              <Button style={{ background: "white url(/zoomin.png) no-repeat center center" }} onClick={() => { paintStore.zoomIn() }}></Button></Tooltip>
+              <Button className="zoomin" onClick={() => { paintStore.zoomIn() }}></Button></Tooltip>
             <Tooltip placement="bottom" title="缩小">
-              <Button style={{ background: "white url(/zoomout.png) no-repeat center center" }} onClick={() => { paintStore.zoomOut() }}></Button></Tooltip>
+              <Button className="zoomout" onClick={() => { paintStore.zoomOut() }}></Button></Tooltip>
             <Tooltip placement="bottom" title="最佳比例">
-              <Button style={{ background: "white url(/fit.png) no-repeat center center" }} onClick={() => { paintStore.resetImgSize() }}></Button></Tooltip>
+              <Button className="fit" onClick={() => { paintStore.resetImgSize() }}></Button></Tooltip>
           </Button.Group>
         </div>
         {slider}
-        <div className="paint-canvas-wrapper">
-          <PaintCanvas></PaintCanvas>
-        </div>
+        <PaintCanvas></PaintCanvas>
         <Modal
           title="选择图片"
           visible={paintStore.showUploadModal}

@@ -1,7 +1,9 @@
 import React, { Component } from "react";
+import { message } from 'antd';
 import { inject, observer } from "mobx-react";
-import { ACTION_DRAG, ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER } from '../../common/common'
+import { ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER } from '../../common/common'
 import { ACTION_CLEAR } from "../../common/common";
+import Hammer from "hammerjs"
 @inject('paintStore')
 @observer
 class PaintCanvas extends Component {
@@ -142,6 +144,8 @@ class PaintCanvas extends Component {
     let { paintStore } = this.props;
     let point = this.getMousePos(e);
     paintStore.onMouseMoveAtPoint(point);
+    e.preventDefault();
+    return false;
   };
   onMouseUp = () => {
     this.isMouseDown = false;
@@ -173,7 +177,7 @@ class PaintCanvas extends Component {
       cursor = 'pointer';
     }
     return (
-      <div className="paint-canvas-wrapper">
+      <div className="paint-canvas-wrapper" style={{background: "url(./bg.png) left center"}}>
         <canvas
           width={paintStore.canvasWidth}
           height={paintStore.canvasHeight}
@@ -186,13 +190,24 @@ class PaintCanvas extends Component {
             if (canvas) {
               this.canvas = canvas;
               this.ctx = canvas.getContext("2d");
+              let hm = new Hammer(canvas);
+              console.log(hm)
+              hm.on('pinch',() => {
+                console.log('pinch');
+                message.info('pinch',1);
+              })
+              hm.on('pan',() => {
+                console.log('pan')
+                message.info('pan',1);
+              })
             }
           }}
           onMouseDown={this.onMouseDown}
-          onTouchStart={this.onMouseDown}
-          onTouchMove={this.onMouseMove}
-          onTouchEnd={this.onMouseUp}
-          onTouchCancel={this.onMouseUp}
+
+          // onTouchStart={this.onMouseDown}
+          // onTouchMove={this.onMouseMove}
+          // onTouchEnd={this.onMouseUp}
+          // onTouchCancel={this.onMouseUp}
         />
         {paintStore.split && <div className="middle-line"></div>}
         {paintStore.split && <canvas

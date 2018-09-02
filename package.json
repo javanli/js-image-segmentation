@@ -6,6 +6,7 @@
   "dependencies": {
     "antd": "^3.8.4",
     "babel-plugin-import": "^1.8.0",
+    "hammerjs": "^2.0.8",
     "mobx": "^5.1.0",
     "mobx-react": "^5.2.5",
     "react": "^16.4.2",

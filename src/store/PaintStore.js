@@ -1,6 +1,6 @@
 import { message } from 'antd';
 import { observable, action, computed } from 'mobx'
-import { ACTION_DRAG, ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER, ClearAction, AddAction, DelAction, RubberAction, DrawAction } from '../common/common'
+import { ACTION_DRAG, ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER, ClearAction, RubberAction, DrawAction } from '../common/common'
 export default class PaintStore {
   // 绘制相关
   @observable type = ACTION_CHOOSE_ADD;// 当前操作类型
@@ -35,6 +35,7 @@ export default class PaintStore {
   constructor() {
     window.onresize = this.updateWindowSize;
     window.onload = this.updateWindowSize;
+    message.config({maxCount:1})
   }
   @computed get canUndo() {
     return this.actionIndex >= 0
@@ -114,8 +115,19 @@ export default class PaintStore {
   }
   @action
   resetImgSize = () => {
-    this.imgAction.width = this.imgAction.img.width;
-    this.imgAction.height = this.imgAction.img.height;
+    let {img} = this.imgAction;
+    if(img.width < this.canvasWidth - 160 && img.height < this.canvasHeight - 160){
+      this.imgAction.width = this.imgAction.img.width;
+      this.imgAction.height = this.imgAction.img.height;
+    }
+    else if(img.width / img.height > (this.canvasWidth - 160) / (this.canvasHeight - 160)){
+      this.imgAction.width = this.canvasWidth - 160;
+      this.imgAction.height = this.imgAction.width / img.width * img.height;
+    }
+    else {
+      this.imgAction.height = this.canvasHeight - 160;
+      this.imgAction.width = this.imgAction.height / img.height * img.width;
+    }
     this.needRedraw = true;
   }
   @action
@@ -127,7 +139,8 @@ export default class PaintStore {
       width: img.width,
       height: img.height
     }
-    this.actions = []
+    this.resetImgSize();
+    this.actions = [];
     this.actionIndex = -1;
     this.needRedraw = true;
   }
