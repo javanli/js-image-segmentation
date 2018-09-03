@@ -1,0 +1,46 @@
+#drag-square {
+  border: 2px dashed black;
+  position: absolute;
+  cursor: pointer;
+  .square {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    z-index: 999;
+    background-color: #fff;
+    outline: 1px solid #3b74f1;
+    transform: translateX(-50%) translateY(-50%);
+  }
+  &.disable {
+    pointer-events: none;
+    .square {
+      display: none;
+    }
+  }
+  &.mobile {
+    pointer-events: none;
+    .square {
+      display: none;
+    }
+  }
+  .nw {
+    cursor: nw-resize;
+    left: 0;
+    top: 0;
+  }
+  .sw {
+    left: 0;
+    top: 100%;
+    cursor: sw-resize;
+  }
+  .ne {
+    top: 0;
+    left: 100%;
+    cursor: ne-resize;
+  }
+  .se {
+    left: 100%;
+    top: 100%;
+    cursor: se-resize;
+  }
+}

@@ -1,6 +1,6 @@
 import { message } from 'antd';
 import { observable, action, computed } from 'mobx'
-import { ACTION_DRAG, ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER, ClearAction, RubberAction, DrawAction } from '../common/common'
+import { ACTION_DRAG, ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER, ClearAction, RubberAction, DrawAction, ACTION_TARGET } from '../common/common'
 export default class PaintStore {
   // 绘制相关
   @observable type = ACTION_CHOOSE_ADD;// 当前操作类型
@@ -11,11 +11,13 @@ export default class PaintStore {
   @observable imgAction = {}; // 图片
   @observable actions = []; // 画笔、橡皮的绘制历史，坐标范围[0,1]，以img为参照
   @observable actionIndex = -1; // 当前索引，用于前进后退
-  @observable targetSquare = {}; // 框选目标区域，TODO
+  @observable targetSquare = { x: 0.25, y: 0.25, width: 0.5, height: 0.5 }; // 框选目标区域
   @observable isMouseDown = false; // 鼠标按下态
   @observable lastDragPoint = null; // 拖拽相关
   @observable needRedraw = false; // 是否需要重绘
   @observable split = false; // 是否拆分成两栏
+  @observable isPinch = false; // 两指拖拽
+  @observable lastPinchDiff = 0; // 两指距离
 
   // UI相关
   @observable windowSize = { x: 0, y: 0 };
@@ -35,7 +37,7 @@ export default class PaintStore {
   constructor() {
     window.onresize = this.updateWindowSize;
     window.onload = this.updateWindowSize;
-    message.config({maxCount:1})
+    message.config({ maxCount: 1 })
   }
   @computed get canUndo() {
     return this.actionIndex >= 0
@@ -70,9 +72,9 @@ export default class PaintStore {
     return points.map(this.point2imgPoint)
   }
   getImgOrigin = () => {
-    let x = this.imgAction.x * this.canvasWidth - this.imgAction.width/2;
-    let y = this.imgAction.y * this.canvasHeight - this.imgAction.height/2;
-    return {x,y};
+    let x = this.imgAction.x * this.canvasWidth - this.imgAction.width / 2;
+    let y = this.imgAction.y * this.canvasHeight - this.imgAction.height / 2;
+    return { x, y };
   }
   @action
   setActionType = (actionType) => {
@@ -103,24 +105,38 @@ export default class PaintStore {
   }
   @action
   zoomIn = () => {
+    let { img } = this.imgAction;
+    if (!img) {
+      message.error('请先插入图片', 1);
+      return;
+    }
     this.imgAction.width *= 1.1;
     this.imgAction.height *= 1.1;
     this.needRedraw = true;
   }
   @action
   zoomOut = () => {
+    let { img } = this.imgAction;
+    if (!img) {
+      message.error('请先插入图片', 1);
+      return;
+    }
     this.imgAction.width *= 0.9;
     this.imgAction.height *= 0.9;
     this.needRedraw = true;
   }
   @action
   resetImgSize = () => {
-    let {img} = this.imgAction;
-    if(img.width < this.canvasWidth - 160 && img.height < this.canvasHeight - 160){
+    let { img } = this.imgAction;
+    if (!img) {
+      message.error('请先插入图片', 1);
+      return;
+    }
+    if (img.width < this.canvasWidth - 160 && img.height < this.canvasHeight - 160) {
       this.imgAction.width = this.imgAction.img.width;
       this.imgAction.height = this.imgAction.img.height;
     }
-    else if(img.width / img.height > (this.canvasWidth - 160) / (this.canvasHeight - 160)){
+    else if (img.width / img.height > (this.canvasWidth - 160) / (this.canvasHeight - 160)) {
       this.imgAction.width = this.canvasWidth - 160;
       this.imgAction.height = this.imgAction.width / img.width * img.height;
     }
@@ -186,6 +202,10 @@ export default class PaintStore {
     }
     let relativePoint = this.point2relativePoint(point);
     this.isMouseDown = true;
+    if(this.type === ACTION_TARGET){
+      this.lastDragPoint = point;
+      return;
+    }
     if (this.canRedo) {
       this.actions.splice(this.actionIndex + 1, this.actions.length - this.actionIndex);
     }
@@ -205,6 +225,23 @@ export default class PaintStore {
   }
   @action
   onMouseMoveAtPoint = (point) => {
+    if (!this.isMouseDown) {
+      return;
+    }
+    if (this.type === ACTION_TARGET){
+      let vx = point.x - this.lastDragPoint.x;
+      let vy = point.y - this.lastDragPoint.y;
+      let { x, y, width, height } = this.targetSquare;
+      x += vx / this.imgAction.width;
+      y += vy / this.imgAction.height;
+      if (x < 0) x = 0;
+      if (x + width > 1) x = 1 - width;
+      if (y < 0) y = 0;
+      if (y + height > 1) y = 1 - height;
+      this.setTargetSquare({ x, y, width, height });
+      this.lastDragPoint = point;
+      return;
+    }
     let relativePoint = this.point2relativePoint(point);
     let currentAction = this.actions[this.actionIndex];
     if (this.type === ACTION_CHOOSE_ADD || this.type === ACTION_CHOOSE_DEL || this.type === ACTION_RUBBER) {
@@ -213,14 +250,58 @@ export default class PaintStore {
     else if (this.type === ACTION_DRAG) {
       let vx = point.x - this.lastDragPoint.x;
       let vy = point.y - this.lastDragPoint.y;
-      this.imgAction.x += vx/this.canvasWidth;
-      this.imgAction.y += vy/this.canvasHeight;
+      this.imgAction.x += vx / this.canvasWidth;
+      this.imgAction.y += vy / this.canvasHeight;
       this.lastDragPoint = point;
     }
     this.needRedraw = true;
   }
   @action
+  onPinchStart = (diff) => {
+    this.isPinch = true;
+    this.lastPinchDiff = diff;
+  }
+  @action
+  onPinchWithDiff = (diff) => {
+    if (this.lastPinchDiff !== 0 && this.isPinch) {
+      let scale = diff > this.lastPinchDiff ? 1.05 : 0.95;
+      if(this.type === ACTION_TARGET){
+        let {x,y,width,height} = this.targetSquare;
+        let centerx = x + width/2;
+        let centery = y + height/2;
+        let minx = centerx > 0.5 ? 1 - centerx : centerx;
+        let miny = centery > 0.5 ? 1 - centery : centery;
+        let scalex = minx/width*2;
+        let scaley = miny/height*2;
+        let maxScale = Math.min(scalex,scaley);
+        if(scale > maxScale){
+          scale = maxScale;
+        }
+        width*=scale;
+        height*=scale;
+        x-=(scale - 1)*width/2;
+        y-=(scale - 1)*height/2;
+        this.targetSquare = {x,y,width,height};
+      }
+      else{
+        this.imgAction.width *= scale;
+        this.imgAction.height *= scale;
+        this.needRedraw = true;
+      }
+    }
+    this.lastPinchDiff = diff;
+  }
+  @action
+  onPinchEnd = () => {
+    this.isPinch = false;
+    this.lastPinchDiff = 0;
+  }
+  @action
   onMouseUp = () => {
     this.isMouseDown = false;
+  }
+  @action
+  setTargetSquare = (square) => {
+    this.targetSquare = square;
   }
 }

@@ -1,7 +1,8 @@
 import React, { Component } from "react";
 import { Radio, Button, Modal, Upload, Icon, message, Slider, Tooltip } from 'antd';
 import PaintCanvas from "../PaintCanvas";
-import { ACTION_DRAG, ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER } from '../../common/common'
+import DragSquare from '../DragSquare'
+import { ACTION_DRAG, ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER, ACTION_TARGET, isMobile } from '../../common/common'
 import { inject, observer } from "mobx-react";
 import './index.less'
 @inject('paintStore')
@@ -85,63 +86,79 @@ class PaintApp extends Component {
     let { paintStore } = this.props;
     let slider = this.getSlider();
     return (
-      <div className="paint-app">
+      <div className={"paint-app" + (isMobile ? ' mobile' : '')}>
         <div className="tool-bar">
-          <Button
-            type="primary"
-            onClick={() => { paintStore.setShowUploadModal(true) }}>
-            <Icon type="upload" />导入</Button>
+          {isMobile ?
+            <Upload
+              name='file'
+              multiple={false}
+              accept="image/*"
+              beforeUpload={this.handleImgUpload}
+              fileList={null}>
+              <Button type="primary">
+                <Icon type="upload" /> 导入
+              </Button>
+            </Upload>
+            : <Button
+              type="primary"
+              onClick={() => { paintStore.setShowUploadModal(true) }}>
+              <Icon type="upload" />导入</Button>}
           <Radio.Group
             className="tool-group"
             value={paintStore.type}
             onChange={(e) => { paintStore.setActionType(e.target.value) }}>
-            <Tooltip placement="bottom" title="绿色画笔">
+            <Tooltip trigger={isMobile ? 'contextMenu' : 'hover'} placement="bottom" title="绿色画笔">
               <Radio.Button
                 className="tool-item add"
                 value={ACTION_CHOOSE_ADD}
               ></Radio.Button>
             </Tooltip>
-            <Tooltip placement="bottom" title="红色画笔">
+            <Tooltip trigger={isMobile ? 'contextMenu' : 'hover'} placement="bottom" title="红色画笔">
               <Radio.Button
                 className="tool-item minus"
                 value={ACTION_CHOOSE_DEL}
               ></Radio.Button>
             </Tooltip>
-            <Tooltip placement="bottom" title="橡皮">
+            <Tooltip trigger={isMobile ? 'contextMenu' : 'hover'} placement="bottom" title="橡皮">
               <Radio.Button
                 className="tool-item rubber"
                 value={ACTION_RUBBER}></Radio.Button></Tooltip>
-            <Tooltip placement="bottom" title="拖拽">
+            <Tooltip trigger={isMobile ? 'contextMenu' : 'hover'} placement="bottom" title="拖拽">
               <Radio.Button
                 className="tool-item hand"
                 value={ACTION_DRAG}></Radio.Button>
             </Tooltip>
+            <Tooltip trigger={isMobile ? 'contextMenu' : 'hover'} placement="bottom" title="选择目标区域">
+              <Radio.Button
+                className="tool-item target"
+                value={ACTION_TARGET}></Radio.Button>
+            </Tooltip>
           </Radio.Group>
           <Button.Group className="tool-group">
-            <Tooltip placement="bottom" title="后退">
+            <Tooltip trigger={isMobile ? 'contextMenu' : 'hover'} placement="bottom" title="后退">
               <Button
                 className="tool-item"
                 disabled={!paintStore.canUndo}
                 onClick={() => { paintStore.undo() }}>
                 <div className="icon backward"></div></Button>
             </Tooltip>
-            <Tooltip placement="bottom" title="前进">
+            <Tooltip trigger={isMobile ? 'contextMenu' : 'hover'} placement="bottom" title="前进">
               <Button
                 className="tool-item"
                 disabled={!paintStore.canRedo}
                 onClick={() => { paintStore.redo() }}>
                 <div className="icon forward"></div></Button></Tooltip>
-            <Tooltip placement="bottom" title="清除">
+            <Tooltip trigger={isMobile ? 'contextMenu' : 'hover'} placement="bottom" title="清除">
               <Button
                 className="tool-item clear"
                 onClick={() => { paintStore.clear() }}></Button></Tooltip>
           </Button.Group>
           <Button.Group className="tool-group" id="size-control">
-            <Tooltip placement="bottom" title="放大">
+            <Tooltip trigger={isMobile ? 'contextMenu' : 'hover'} placement="bottom" title="放大">
               <Button className="zoomin" onClick={() => { paintStore.zoomIn() }}></Button></Tooltip>
-            <Tooltip placement="bottom" title="缩小">
+            <Tooltip trigger={isMobile ? 'contextMenu' : 'hover'} placement="bottom" title="缩小">
               <Button className="zoomout" onClick={() => { paintStore.zoomOut() }}></Button></Tooltip>
-            <Tooltip placement="bottom" title="最佳比例">
+            <Tooltip trigger={isMobile ? 'contextMenu' : 'hover'} placement="bottom" title="最佳比例">
               <Button className="fit" onClick={() => { paintStore.resetImgSize() }}></Button></Tooltip>
           </Button.Group>
         </div>
@@ -175,11 +192,12 @@ class PaintApp extends Component {
             accept="image/*"
             beforeUpload={this.handleImgUpload}
             fileList={null}>
-            <Button type="primary" style={{marginTop:20}}>
+            <Button type="primary" style={{ marginTop: 20 }}>
               <Icon type="upload" /> 选择
             </Button>
           </Upload>
         </Modal>
+        <DragSquare></DragSquare>
       </div>
     );
   }

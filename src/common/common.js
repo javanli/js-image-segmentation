@@ -3,6 +3,8 @@ export const ACTION_CHOOSE_DEL = 'ACTION_CHOOSE_DEL';
 export const ACTION_RUBBER = 'ACTION_RUBBER';
 export const ACTION_DRAG = 'ACTION_DRAG';
 export const ACTION_CLEAR = 'ACTION_CLEAR';
+export const ACTION_TARGET = 'ACTION_TARGET';
+export const isMobile = /(Mobile)/i.test(window.navigator.userAgent);
 export class Action {
   constructor(type) {
     this.type = type;

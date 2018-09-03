@@ -11,7 +11,6 @@
     // width: 170px;
   }
 }
-
 @media (min-width: 700px) {
   .slider-wrapper {
     position: absolute;
@@ -20,6 +19,17 @@
   }
   .tool-group {
     margin-left: 20px;
+  }
+}
+.mobile {
+  .slider-wrapper {
+    position: absolute;
+    left: 5px;
+    bottom: 5px;
+    // width: 170px;
+  }
+  #size-control {
+    display: none;
   }
 }
 #root {
@@ -90,6 +100,10 @@
       }
       .hand {
         background: url(../../res/hand.svg) no-repeat center center white;
+        background-size: 16px;
+      }
+      .target {
+        background: url(../../res/target.svg) no-repeat center center white;
         background-size: 16px;
       }
     }

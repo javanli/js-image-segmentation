@@ -1,9 +1,7 @@
 import React, { Component } from "react";
-import { message } from 'antd';
 import { inject, observer } from "mobx-react";
 import { ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER } from '../../common/common'
 import { ACTION_CLEAR } from "../../common/common";
-import Hammer from "hammerjs"
 @inject('paintStore')
 @observer
 class PaintCanvas extends Component {
@@ -43,6 +41,18 @@ class PaintCanvas extends Component {
       y: clientY - rect.top
     };
   };
+  getPinchDiff = e => {
+    if (e.touches && e.touches.length === 2) {
+      let x1 = e.touches[0].clientX;
+      let y1 = e.touches[0].clientY;
+      let x2 = e.touches[1].clientX;
+      let y2 = e.touches[1].clientY;
+      var a = x1 - x2;
+      var b = y1 - y2;
+      return Math.sqrt(a * a + b * b);
+    }
+    return 0;
+  }
   /**
    * 绘制相关
    */
@@ -54,12 +64,12 @@ class PaintCanvas extends Component {
     if (paintStore.split && this.ctx2) {
       this.ctx2.clearRect(0, 0, paintStore.canvasWidth, paintStore.canvasHeight);
     }
-    this.offscreenCtx.clearRect(0,0,this.offscreenCanvas.width,this.offscreenCanvas.height);
+    this.offscreenCtx.clearRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
   }
   redraw = () => {
     let { paintStore } = this.props;
     if (paintStore.needRedraw && paintStore.imgAction.img) {
-      console.log('redraw',paintStore)
+      // console.log('redraw', paintStore)
       paintStore.onRedraw();
       this.clear();
       this.drawImg(paintStore.imgAction);
@@ -70,10 +80,10 @@ class PaintCanvas extends Component {
           this.applyAction(action);
         }
       });
-      let {width, height } = paintStore.imgAction;
-      let {x,y} = paintStore.getImgOrigin();
+      let { width, height } = paintStore.imgAction;
+      let { x, y } = paintStore.getImgOrigin();
       this.ctx.globalAlpha = 0.4;
-      this.ctx.drawImage(this.offscreenCanvas,x,y,width,height);
+      this.ctx.drawImage(this.offscreenCanvas, x, y, width, height);
       this.ctx.globalAlpha = 1.0;
     }
     window.requestAnimationFrame(this.redraw);
@@ -92,7 +102,7 @@ class PaintCanvas extends Component {
       this.offscreenCtx.globalCompositeOperation = "source-over";
     }
     else if (action.type === ACTION_CLEAR) {
-      this.offscreenCtx.clearRect(0,0,this.offscreenCanvas.width,this.offscreenCanvas.height);
+      this.offscreenCtx.clearRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
     }
 
   }
@@ -127,11 +137,45 @@ class PaintCanvas extends Component {
   drawImg = (imgAction) => {
     if (!this.ctx) return;
     let { img, width, height } = imgAction;
-    let {x,y} = this.props.paintStore.getImgOrigin();
+    let { x, y } = this.props.paintStore.getImgOrigin();
     this.ctx.drawImage(img, x, y, width, height);
-    if(this.props.paintStore.split){
+    if (this.props.paintStore.split) {
       this.ctx2.drawImage(img, x, y, width, height);
     }
+  }
+
+  // 交互事件处理
+  onTouchStart = e => {
+    console.log('canvas touch start')
+    if (e.touches.length === 1) {
+      this.onMouseDown(e);
+    }
+    else if (e.touches.length === 2) {
+      this.onMouseUp(e);
+      let diff = this.getPinchDiff(e);
+      this.props.paintStore.onPinchStart(diff);
+    }
+
+    e.preventDefault();
+    return false;
+  }
+  onTouchMove = e => {
+    if (e.touches.length === 1) {
+      this.onMouseMove(e);
+    }
+    else if (e.touches.length === 2) {
+      this.onMouseUp(e);
+      let diff = this.getPinchDiff(e);
+      this.props.paintStore.onPinchWithDiff(diff);
+    }
+    e.preventDefault();
+    return false;
+  }
+  onTouchEnd = e => {
+    this.onMouseUp();
+    this.props.paintStore.onPinchEnd();
+    e.preventDefault();
+    return false;
   }
   onMouseDown = e => {
     let point = this.getMousePos(e);
@@ -148,7 +192,7 @@ class PaintCanvas extends Component {
     return false;
   };
   onMouseUp = () => {
-    this.isMouseDown = false;
+    this.props.paintStore.onMouseUp();
     window.removeEventListener('mousemove', this.onMouseMove)
     window.removeEventListener('mouseup', this.onMouseUp)
   };
@@ -177,7 +221,7 @@ class PaintCanvas extends Component {
       cursor = 'pointer';
     }
     return (
-      <div className="paint-canvas-wrapper" style={{background: "url(./bg.png) left center"}}>
+      <div className="paint-canvas-wrapper" style={{ background: "url(./bg.png) left center" }}>
         <canvas
           width={paintStore.canvasWidth}
           height={paintStore.canvasHeight}
@@ -190,24 +234,14 @@ class PaintCanvas extends Component {
             if (canvas) {
               this.canvas = canvas;
               this.ctx = canvas.getContext("2d");
-              let hm = new Hammer(canvas);
-              console.log(hm)
-              hm.on('pinch',() => {
-                console.log('pinch');
-                message.info('pinch',1);
-              })
-              hm.on('pan',() => {
-                console.log('pan')
-                message.info('pan',1);
-              })
             }
           }}
           onMouseDown={this.onMouseDown}
 
-          // onTouchStart={this.onMouseDown}
-          // onTouchMove={this.onMouseMove}
-          // onTouchEnd={this.onMouseUp}
-          // onTouchCancel={this.onMouseUp}
+          onTouchStart={this.onTouchStart}
+          onTouchMove={this.onTouchMove}
+          onTouchEnd={this.onTouchEnd}
+          onTouchCancel={this.onTouchEnd}
         />
         {paintStore.split && <div className="middle-line"></div>}
         {paintStore.split && <canvas
