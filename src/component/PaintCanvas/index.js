@@ -37,8 +37,8 @@ class PaintCanvas extends Component {
 
     // return mouse/touch position inside canvas
     return {
-      x: clientX - rect.left,
-      y: clientY - rect.top
+      x: clientX - rect.left + 8,
+      y: clientY - rect.top + 8
     };
   };
   getPinchDiff = e => {
