@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { inject, observer } from "mobx-react";
 import { ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER } from '../../common/common'
 import { ACTION_CLEAR } from "../../common/common";
+import DragSquare from '../DragSquare'
 @inject('paintStore')
 @observer
 class PaintCanvas extends Component {
@@ -223,6 +224,17 @@ class PaintCanvas extends Component {
     }
     return (
       <div className="paint-canvas-wrapper" style={{ background: "url(./bg.png) left center" }}>
+        <div style={{
+            display: "block",
+            touchAction: "none",
+            cursor: cursor,
+            width:paintStore.canvasWidth,
+            height:paintStore.canvasHeight,
+            overflow:'hidden',
+            position:'relative',
+            zIndex:0
+          }}>
+        <DragSquare></DragSquare>
         <canvas
           width={paintStore.canvasWidth}
           height={paintStore.canvasHeight}
@@ -244,6 +256,7 @@ class PaintCanvas extends Component {
           onTouchEnd={this.onTouchEnd}
           onTouchCancel={this.onTouchEnd}
         />
+        </div>
         {paintStore.split && <div className="middle-line"></div>}
         {paintStore.split && <canvas
           width={paintStore.canvasWidth}

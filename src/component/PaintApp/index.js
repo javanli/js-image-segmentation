@@ -196,7 +196,6 @@ class PaintApp extends Component {
             </Button>
           </Upload>
         </Modal>
-        <DragSquare></DragSquare>
       </div>
     );
   }

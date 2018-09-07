@@ -155,6 +155,8 @@ export default class PaintStore {
       this.imgAction.height = this.canvasHeight - 160;
       this.imgAction.width = this.imgAction.height / img.height * img.width;
     }
+    this.imgAction.x = 0.5;
+    this.imgAction.y = 0.5;
     this.needRedraw = true;
   }
   @action
@@ -261,8 +263,12 @@ export default class PaintStore {
     else if (this.type === ACTION_DRAG) {
       let vx = point.x - this.lastDragPoint.x;
       let vy = point.y - this.lastDragPoint.y;
-      this.imgAction.x += vx / this.canvasWidth;
-      this.imgAction.y += vy / this.canvasHeight;
+      if(vx < 0 || this.imgAction.x * this.canvasWidth + vx - this.imgAction.width/2 < this.canvasWidth - 5){
+        this.imgAction.x += vx / this.canvasWidth;
+      }
+      if(vy < 0 || this.imgAction.y * this.canvasHeight + vy - this.imgAction.height/2 < this.canvasHeight - 5){
+        this.imgAction.y += vy / this.canvasHeight;
+      }
       this.lastDragPoint = point;
     }
     this.needRedraw = true;
