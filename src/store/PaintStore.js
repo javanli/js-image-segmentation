@@ -1,6 +1,6 @@
 import { message } from 'antd';
 import { observable, action, computed } from 'mobx'
-import { ACTION_DRAG, ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER, ClearAction, RubberAction, DrawAction, ACTION_TARGET } from '../common/common'
+import { ACTION_DRAG, ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER, ClearAction, RubberAction, DrawAction, ACTION_TARGET, isMobile } from '../common/common'
 export default class PaintStore {
   // 绘制相关
   @observable type = ACTION_CHOOSE_ADD;// 当前操作类型
@@ -24,9 +24,20 @@ export default class PaintStore {
   @observable showUploadModal = false;
   @action
   updateWindowSize = () => {
-    let x = window.innerWidth;
-    let y = window.innerHeight;
-    this.split = x > 700;
+    let x = document.documentElement.clientWidth || document.body.clientWidth;
+    let y = document.documentElement.clientHeight || document.body.clientHeight;
+    if(isMobile){
+      if(x > y){
+        y = window.screen.width;
+        x = window.screen.height;
+      }
+      else{
+        x = window.screen.width;
+        y = window.screen.height;
+      }
+    }
+    console.log('resize',x,y)
+    this.split = x > 700 && !isMobile;
     this.windowSize = { x, y };
     this.needRedraw = true;
   }

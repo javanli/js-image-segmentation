@@ -1,19 +1,6 @@
 @btn-size: 32px;
 @btn-size-large: 36px;
-@media (max-width: 700px) {
-  .slider-wrapper {
-    position: absolute;
-    left: 5px;
-    bottom: 5px;
-    // width: 170px;
-  }
-}
 @media (min-width: 700px) {
-  .slider-wrapper {
-    position: absolute;
-    left: 475px;
-    top: 5px;
-  }
   .tool-group {
     margin-left: 20px;
   }
@@ -42,6 +29,7 @@
     position: absolute;
     left: 5px;
     bottom: 5px;
+    top: auto;
     // width: 170px;
   }
   #size-control {
@@ -133,6 +121,9 @@
     border: 1px solid #D9D9D9;
     border-radius: 4px;
     min-height: 32px;
+    position: absolute;
+    left: 475px;
+    top: 5px;
     .indicator-wrapper {
       margin: 0 10px;
       width: 40px;
@@ -148,9 +139,14 @@
     display: flex;
     justify-content: center;
     width: 100%;
+    height: 100%;
     .middle-line {
-      flex: 1;
+      width: 1px;
       background-color: gray;
+    }
+    canvas {
+      flex:1;
+      height: 100%;
     }
   }
 }
