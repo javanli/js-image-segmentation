@@ -95,8 +95,7 @@ class PaintApp extends Component {
               accept="image/*"
               beforeUpload={this.handleImgUpload}
               fileList={null}>
-              <Button type="primary">
-                <Icon type="upload" /> 导入
+              <Button type="primary">导入
               </Button>
             </Upload>
             : <Button
