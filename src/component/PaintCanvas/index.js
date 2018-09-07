@@ -198,7 +198,8 @@ class PaintCanvas extends Component {
   };
   onMouseWheel = (e) => {
     let { paintStore } = this.props;
-    if (e.wheelDelta > 0) {
+    let delta = e.deltaY ? -e.deltaY : e.wheelDelta;
+    if (delta > 0) {
       paintStore.zoomIn();
     }
     else {
