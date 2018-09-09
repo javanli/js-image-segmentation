@@ -280,7 +280,7 @@ export default class PaintStore {
   }
   @action
   onPinchWithDiff = (diff) => {
-    if (this.lastPinchDiff !== 0 && this.isPinch) {
+    if (this.lastPinchDiff !== 0 && this.isPinch && diff !== this.lastPinchDiff) {
       let scale = diff > this.lastPinchDiff ? 1.05 : 0.95;
       if(this.type === ACTION_TARGET){
         let {x,y,width,height} = this.targetSquare;
