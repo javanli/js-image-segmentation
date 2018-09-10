@@ -1,6 +1,20 @@
 # canvas-paint
 canvas 画笔项目，对标[clippingMagic](https://clippingmagic.com/)。仅实现基本交互与绘制，不包括抠图部分。
 
+# 相关说明
+本项目使用React最常用的框架creat-react-app开发，UI组件使用了Antd。
+
+```
+目录结构
+src
+├─common //定义一些公用方法与全局变量
+├─component
+│  ├─DragSquare //用于拖拽的矩形框
+│  ├─PaintApp //项目主入口，工具栏写在这里
+│  └─PaintCanvas //canvas绘图，主要负责渲染
+├─res //一些图片资源
+└─store //全局状态管理，基本上所有数据都在这里管理
+```
 # build
 1. 环境准备
   * 安装node,npm
