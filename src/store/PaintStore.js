@@ -18,6 +18,7 @@ export default class PaintStore {
   @observable split = false; // 是否拆分成两栏
   @observable isPinch = false; // 两指拖拽
   @observable lastPinchDiff = 0; // 两指距离
+  @observable needMatting = false;
 
   // UI相关
   @observable windowSize = { x: 0, y: 0 };
@@ -75,9 +76,13 @@ export default class PaintStore {
     return { x, y };
   }
   point2imgPoint = (point) => {
-    let x = Math.floor(point.x * this.imgAction.width);
-    let y = Math.floor(point.y * this.imgAction.height);
-    return { x, y }
+    if(this.imgAction.img){
+      let {width,height} = this.imgAction.img;
+      let x = Math.floor(point.x * width);
+      let y = Math.floor(point.y * height);
+      return {x,y};
+    }
+    return {x:0,y:0};
   }
   points2imgPoints = (points) => {
     return points.map(this.point2imgPoint)
@@ -86,6 +91,10 @@ export default class PaintStore {
     let x = this.imgAction.x * this.canvasWidth - this.imgAction.width / 2;
     let y = this.imgAction.y * this.canvasHeight - this.imgAction.height / 2;
     return { x, y };
+  }
+  @action
+  setNeedMatting = (isNeed) => {
+    this.needMatting = isNeed;
   }
   @action
   setActionType = (actionType) => {

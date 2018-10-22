@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import { Radio, Button, Modal, Upload, Icon, message, Slider, Tooltip } from 'antd';
 import PaintCanvas from "../PaintCanvas";
-import DragSquare from '../DragSquare'
 import { ACTION_DRAG, ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER, ACTION_TARGET, isMobile } from '../../common/common'
 import { inject, observer } from "mobx-react";
 import './index.less'
@@ -160,6 +159,7 @@ class PaintApp extends Component {
             <Tooltip trigger={isMobile ? 'contextMenu' : 'hover'} placement="bottom" title="最佳比例">
               <Button className="fit" onClick={() => { paintStore.resetImgSize() }}></Button></Tooltip>
           </Button.Group>
+          <Button className="fit" onClick={() => { paintStore.setNeedMatting(true) }}></Button>
         </div>
         {slider}
         <PaintCanvas></PaintCanvas>
@@ -196,6 +196,8 @@ class PaintApp extends Component {
             </Button>
           </Upload>
         </Modal>
+        <img id="test_ori" src="" alt=""/>
+        <img id="test_tri" src="" alt=""/>
       </div>
     );
   }
