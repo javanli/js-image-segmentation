@@ -1,6 +1,6 @@
 import { message } from 'antd';
 import { observable, action, computed } from 'mobx'
-import { ACTION_DRAG, ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER, ClearAction, RubberAction, DrawAction, ACTION_TARGET, isMobile } from '../common/common'
+import { ACTION_DRAG, ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER, ClearAction, RubberAction, DrawAction, ACTION_TARGET, isMobile, data2gray } from '../common/common'
 export default class PaintStore {
   // 绘制相关
   @observable type = ACTION_CHOOSE_ADD;// 当前操作类型
@@ -181,6 +181,19 @@ export default class PaintStore {
     this.actions = [];
     this.actionIndex = -1;
     this.needRedraw = true;
+    this.updateImgData();
+  }
+  updateImgData = () => {
+    let img = this.imgAction.img;
+    var canvas = document.createElement("canvas");
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+
+    this.data = ctx.getImageData(0, 0, img.width, img.height).data;
+    this.grayData = data2gray(this.data, img.width, img.height);
   }
   @action
   onRedraw = () => {

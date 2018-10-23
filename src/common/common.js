@@ -40,3 +40,13 @@ export class RubberAction extends DrawAction {
     super(ACTION_RUBBER, points, size);
   }
 }
+export function data2gray(data, width, height) {
+  let gray = new Array(width * height);
+  for (let i = 0; i < height; i++) {
+      for (let j = 0; j < width; j++) {
+          let index = ((i * width) + j) * 4;
+          gray[i * width + j] = 299/1000 * data[index] + 587/1000 * data[index + 1] + 114/1000 * data[index + 2];
+      }
+  }
+  return gray;
+}

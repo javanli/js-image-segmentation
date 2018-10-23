@@ -3,9 +3,11 @@ import InpaintTelea from './inpaint'
 import blur from './gaussion_filter'
 export default class MattingHandler {
     // 传入两个灰度图
-    constructor(imgData, imgMapData) {
-        this.imgData = imgData;
+    constructor(imgData, imgMapData,width,height) {
+        this.imgdata = imgData;
         this.imgMapData = imgMapData;
+        this.w = width;
+        this.h = height;
     }
     sum = (array) => {
         let sum = 0;
@@ -54,16 +56,16 @@ export default class MattingHandler {
         return gray;
     }
     getImgPixel = (data, i, j) => {
-        return data[i * w + j]
+        return data[i * this.w + j]
     }
     foreFlag = (i, j) => {
-        return getImgPixel(imgMapData, i, j) == 255;
+        return this.getImgPixel(this.imgMapData, i, j) == 255;
     }
     backFlag = (i, j) => {
-        return getImgPixel(imgMapData, i, j) == 0;
+        return this.getImgPixel(this.imgMapData, i, j) == 0;
     }
     unknownFlag = (i, j) => {
-        if (!backFlag(i, j) && !foreFlag(i, j)) {
+        if (!this.backFlag(i, j) && !this.foreFlag(i, j)) {
             return true;
         }
         return false;
@@ -82,6 +84,7 @@ export default class MattingHandler {
         }
     }
     computeAlpha = (alpha, b) => {
+        let {w,h} = this;
         let alphaNew = alpha.slice();
         let alphaOld = new Array(w * h);
         alphaOld.fill(0);
@@ -101,7 +104,7 @@ export default class MattingHandler {
             alphaOld = alphaNew.slice();
             for (let i = 1; i < h - 1; i++) {
                 for (let j = 1; j < w - 1; j++) {
-                    if (unknownFlag(i, j)) {
+                    if (this.unknownFlag(i, j)) {
                         alphaNew[i * w + j] = 1 / 4 * (alphaNew[(i - 1) * w + j] + alphaNew[i * w + j - 1] + alphaOld[i * w + j + 1] + alphaOld[(i + 1) * w + j] - b[i * w + j])
                         if (isNaN(alphaNew[i * w + j])) {
                             debugger;
@@ -116,16 +119,17 @@ export default class MattingHandler {
     }
     handle = () => {
         // console.log('handle')
+        let {w,h} = this;
         let foreGray = new Uint8Array(w * h);
         let foreMask = new Uint8Array(w * h);
         let backGray = new Uint8Array(w * h);
         let backMask = new Uint8Array(w * h);
         for (let i = 0; i < h; i++) {
             for (let j = 0; j < w; j++) {
-                foreGray[i * w + j] = Math.round(imgdata[i * w + j] * foreFlag(i, j));
-                backGray[i * w + j] = Math.round(imgdata[i * w + j] * backFlag(i, j));
-                foreMask[i * w + j] = Math.round((unknownFlag(i, j) + backFlag(i, j)));
-                backMask[i * w + j] = Math.round((unknownFlag(i, j) + foreFlag(i, j)));
+                foreGray[i * w + j] = Math.round(this.imgdata[i * w + j] * this.foreFlag(i, j));
+                backGray[i * w + j] = Math.round(this.imgdata[i * w + j] * this.backFlag(i, j));
+                foreMask[i * w + j] = Math.round((this.unknownFlag(i, j) + this.backFlag(i, j)));
+                backMask[i * w + j] = Math.round((this.unknownFlag(i, j) + this.foreFlag(i, j)));
             }
         }
         // console.log('gray', sum(imgdata));
@@ -141,7 +145,7 @@ export default class MattingHandler {
         let diff = new Array(w * h).fill(0);
         for (let i = 0; i < h; i++) {
             for (let j = 0; j < w; j++) {
-                diff[i * w + j] = foreGray[i * w + j] * !backFlag(i, j) - backGray[i * w + j] * !foreFlag(i, j);
+                diff[i * w + j] = foreGray[i * w + j] * !this.backFlag(i, j) - backGray[i * w + j] * !this.foreFlag(i, j);
             }
         }
         // console.log('diff', sum(diff))
@@ -149,7 +153,7 @@ export default class MattingHandler {
         // console.log('diff2', sum(diff))
         let dx = new Array(w * h).fill(0);
         let dy = new Array(w * h).fill(0);
-        gradient(imgdata, dx, dy, w, h);
+        this.gradient(this.imgdata, dx, dy, w, h);
         let tmp = new Array(w * h).fill(0);
         let d2y = new Array(w * h).fill(0);
         let d2x = new Array(w * h).fill(0);
@@ -157,8 +161,8 @@ export default class MattingHandler {
             dx[i] = dx[i] / diff[i];
             dy[i] = dy[i] / diff[i];
         }
-        gradient(dy, tmp, d2y, w, h);
-        gradient(dx, d2x, tmp, w, h);
+        this.gradient(dy, tmp, d2y, w, h);
+        this.gradient(dx, d2x, tmp, w, h);
         let b = new Array(w * h).fill(0);
         let originA = new Array(w * h).fill(0);
         for (let i = 0; i < w * h; i++) {
@@ -167,11 +171,11 @@ export default class MattingHandler {
         // console.log('b', sum(b))
         for (let i = 0; i < h; i++) {
             for (let j = 0; j < w; j++) {
-                originA[i * w + j] = foreFlag(i, j) + 0.5 * unknownFlag(i, j);
+                originA[i * w + j] = this.foreFlag(i, j) + 0.5 * this.unknownFlag(i, j);
             }
         }
         // console.log('oria', sum(originA))
-        let alpha = computeAlpha(originA, b);
+        let alpha = this.computeAlpha(originA, b);
         // drawAlphaOnCanvas(alpha);
         return alpha;
 

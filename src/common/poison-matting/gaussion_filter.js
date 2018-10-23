@@ -98,7 +98,7 @@ function convolve(src, out, line, coeff, width, height) {
 }
 
 
-export function blur(src, width, height, radius) {
+export default function blur(src, width, height, radius) {
   // Quick exit on zero radius
   if (!radius) { return; }
 

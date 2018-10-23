@@ -1,7 +1,8 @@
 import React, { Component } from "react";
 import { inject, observer } from "mobx-react";
-import { ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER } from '../../common/common'
+import { ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER, data2gray } from '../../common/common'
 import { ACTION_CLEAR } from "../../common/common";
+import MattingHandler from "../../common/poison-matting/matting"
 @inject('paintStore')
 @observer
 class PaintCanvas extends Component {
@@ -17,6 +18,8 @@ class PaintCanvas extends Component {
     this.offscreenCtx = this.offscreenCanvas.getContext('2d');
     this.triCanvas = document.createElement("canvas");
     this.triCtx = this.triCanvas.getContext('2d');
+    this.alphaCanvas = document.createElement("canvas");
+    this.alphaCtx = this.alphaCanvas.getContext('2d');
   }
   /**
    * 工具函数
@@ -69,15 +72,16 @@ class PaintCanvas extends Component {
   }
   redraw = () => {
     let { paintStore } = this.props;
-    if (paintStore.needRedraw && paintStore.imgAction.img) {
+    let img = paintStore.imgAction.img;
+    if (paintStore.needRedraw && img) {
       // console.log('redraw', paintStore)
       paintStore.onRedraw();
       this.clear();
       this.drawImg(paintStore.imgAction);
-      this.offscreenCanvas.width = paintStore.imgAction.img.width;
-      this.offscreenCanvas.height = paintStore.imgAction.img.height;
-      this.triCanvas.width = paintStore.imgAction.img.width;
-      this.triCanvas.height = paintStore.imgAction.img.height;
+      this.offscreenCanvas.width = img.width;
+      this.offscreenCanvas.height = img.height;
+      this.triCanvas.width = img.width;
+      this.triCanvas.height = img.height;
       this.triCtx.fillStyle = "#888";
       this.triCtx.fillRect(0, 0, this.triCanvas.width, this.triCanvas.height);
       paintStore.actions.forEach((action, idx) => {
@@ -92,27 +96,52 @@ class PaintCanvas extends Component {
       this.ctx.globalAlpha = 1.0;
 
     }
-    if(paintStore.needMatting && paintStore.imgAction.img) {
+    if (paintStore.needMatting && paintStore.imgAction.img) {
       paintStore.setNeedMatting(false);
       // TODO : do matting
+      let grayData = paintStore.grayData.slice();
+      let tridata = this.triCtx.getImageData(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height).data;
+      let triGrayData = data2gray(tridata, img.width, img.height);
+      let handler = new MattingHandler(grayData, triGrayData,img.width,img.height);
+      let alpha = handler.handle();
+
+      let originData = paintStore.data.slice();
+      for (let i = 0; i < img.height; i++) {
+        for (let j = 0; j < img.width; j++) {
+          let index = ((i * img.width) + j) * 4;
+          // originData[index + 3] = Math.round(alpha[i * img.width + j] * 255);
+          originData[index + 3] = Math.round(alpha[i * img.width + j] * 255) > 125 ? 255 : 0;
+        }
+      }
+      let imgData = new ImageData(originData,img.width,img.height);
+      // imgData.data = originData;
+      this.alphaCanvas.width = img.width;
+      this.alphaCanvas.height = img.height;
+      this.alphaCtx.putImageData(imgData,0,0);
+
+      let { width, height } = paintStore.imgAction;
+      let { x, y } = this.props.paintStore.getImgOrigin();
+      this.resultCtx.clearRect(0,0,this.resultCanvas.width,this.resultCanvas.height);
+      this.resultCtx.drawImage(this.alphaCanvas, x, y, width, height);
+
     }
     window.requestAnimationFrame(this.redraw);
   };
   applyAction = (action) => {
     let { paintStore } = this.props;
     if (action.type === ACTION_CHOOSE_ADD) {
-      this.drawLine(action, paintStore.addColor,this.offscreenCtx);
-      this.drawLine(action, '#fff',this.triCtx);
+      this.drawLine(action, paintStore.addColor, this.offscreenCtx);
+      this.drawLine(action, '#fff', this.triCtx);
     }
     else if (action.type === ACTION_CHOOSE_DEL) {
-      this.drawLine(action, paintStore.delColor,this.offscreenCtx);
-      this.drawLine(action, '#000',this.triCtx);
+      this.drawLine(action, paintStore.delColor, this.offscreenCtx);
+      this.drawLine(action, '#000', this.triCtx);
     }
     else if (action.type === ACTION_RUBBER) {
       this.offscreenCtx.globalCompositeOperation = "destination-out";
-      this.drawLine(action, '#fff',this.offscreenCtx);
+      this.drawLine(action, '#fff', this.offscreenCtx);
       this.offscreenCtx.globalCompositeOperation = "source-over";
-      this.drawLine(action, '#888',this.triCtx);
+      this.drawLine(action, '#888', this.triCtx);
     }
     else if (action.type === ACTION_CLEAR) {
       this.offscreenCtx.clearRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
@@ -121,7 +150,7 @@ class PaintCanvas extends Component {
     }
 
   }
-  drawLine = (lineAction, color,ctx) => {
+  drawLine = (lineAction, color, ctx) => {
     let { paintStore } = this.props;
     let { points, size } = lineAction;
     points = paintStore.points2imgPoints(points);
@@ -153,10 +182,10 @@ class PaintCanvas extends Component {
     let { img, width, height } = imgAction;
     let { x, y } = this.props.paintStore.getImgOrigin();
     this.ctx.drawImage(img, x, y, width, height);
-    if (this.props.paintStore.split) {
-      this.resultCtx.drawImage(img, 0, 0, img.width, img.height);
-      let imgData = this.resultCtx.getImageData(0,0,img.width,img.height);
-    }
+    // if (this.props.paintStore.split) {
+    //   this.resultCtx.drawImage(img, 0, 0, img.width, img.height);
+    //   let imgData = this.resultCtx.getImageData(0, 0, img.width, img.height);
+    // }
   }
 
   // 交互事件处理
@@ -240,41 +269,41 @@ class PaintCanvas extends Component {
     return (
       <div className="paint-canvas-wrapper" style={{ background: "url(./bg.png) left center" }}>
         <div style={{
-            display: "block",
-            touchAction: "none",
-            cursor: cursor,
-            width:paintStore.canvasWidth,
-            height:paintStore.canvasHeight,
-            overflow:'hidden',
-            position:'relative',
-            zIndex:0
-          }}>
-        <canvas
-          width={paintStore.canvasWidth}
-          height={paintStore.canvasHeight}
-          style={{
-            display: "block",
-            touchAction: "none",
-            cursor: cursor
-          }}
-          ref={canvas => {
-            if (canvas) {
-              this.canvas = canvas;
-              this.ctx = canvas.getContext("2d");
-            }
-          }}
-          onMouseDown={this.onMouseDown}
+          display: "block",
+          touchAction: "none",
+          cursor: cursor,
+          width: paintStore.canvasWidth,
+          height: paintStore.canvasHeight,
+          overflow: 'hidden',
+          position: 'relative',
+          zIndex: 0
+        }}>
+          <canvas
+            width={paintStore.canvasWidth}
+            height={paintStore.canvasHeight}
+            style={{
+              display: "block",
+              touchAction: "none",
+              cursor: cursor
+            }}
+            ref={canvas => {
+              if (canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext("2d");
+              }
+            }}
+            onMouseDown={this.onMouseDown}
 
-          onTouchStart={this.onTouchStart}
-          onTouchMove={this.onTouchMove}
-          onTouchEnd={this.onTouchEnd}
-          onTouchCancel={this.onTouchEnd}
-        />
+            onTouchStart={this.onTouchStart}
+            onTouchMove={this.onTouchMove}
+            onTouchEnd={this.onTouchEnd}
+            onTouchCancel={this.onTouchEnd}
+          />
         </div>
         {paintStore.split && <div className="middle-line"></div>}
         {paintStore.split && <canvas
-          width={img?img.width:0}
-          height={img?img.height:0}
+          width={paintStore.canvasWidth}
+          height={paintStore.canvasHeight}
           style={{
             display: "block",
             touchAction: "none"
