@@ -53,7 +53,7 @@
   heapq.pop() ==> 3
 
 */
-function HeapQueue(cmp){
+export default function HeapQueue(cmp){
 	this.cmp = (cmp || function(a, b){ return a - b });
 	this.length = 0;
 	this.data = []

@@ -2,8 +2,8 @@
 // because most of this is a fairly straightforward port of the scikit-image
 // implementation which can be found in 
 // https://github.com/chintak/scikit-image/blob/inpaint/skimage/filter/_inpaint_fmm.pyx
-
-function InpaintTelea(width, height, image, mask, radius){
+import HeapQueue from './heapqueue'
+export default function InpaintTelea(width, height, image, mask, radius){
 	if(!radius) radius = 5;
 
 	var LARGE_VALUE = 1e6;

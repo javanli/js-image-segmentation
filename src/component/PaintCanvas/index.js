@@ -2,8 +2,6 @@ import React, { Component } from "react";
 import { inject, observer } from "mobx-react";
 import { ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER } from '../../common/common'
 import { ACTION_CLEAR } from "../../common/common";
-import SharedGL from '../../common/matting/shared';
-import {getScale} from '../../common/matting/utils'
 @inject('paintStore')
 @observer
 class PaintCanvas extends Component {
@@ -19,8 +17,6 @@ class PaintCanvas extends Component {
     this.offscreenCtx = this.offscreenCanvas.getContext('2d');
     this.triCanvas = document.createElement("canvas");
     this.triCtx = this.triCanvas.getContext('2d');
-    this.mattingCanvas = document.createElement("canvas");
-    this.runner = new SharedGL(this.mattingCanvas);
   }
   /**
    * 工具函数
@@ -82,8 +78,6 @@ class PaintCanvas extends Component {
       this.offscreenCanvas.height = paintStore.imgAction.img.height;
       this.triCanvas.width = paintStore.imgAction.img.width;
       this.triCanvas.height = paintStore.imgAction.img.height;
-      this.mattingCanvas.width = paintStore.imgAction.img.width;
-      this.mattingCanvas.height = paintStore.imgAction.img.height;
       this.triCtx.fillStyle = "#888";
       this.triCtx.fillRect(0, 0, this.triCanvas.width, this.triCanvas.height);
       paintStore.actions.forEach((action, idx) => {
@@ -100,16 +94,8 @@ class PaintCanvas extends Component {
     }
     if(paintStore.needMatting && paintStore.imgAction.img) {
       paintStore.setNeedMatting(false);
-      this.mattingCanvas.width = paintStore.imgAction.img.width;
-      this.mattingCanvas.height = paintStore.imgAction.img.height;
-      let url = this.triCanvas.toDataURL()
-      this.runner.setImage(paintStore.imgAction.img.src);
-      this.runner.setTrimap(url);
-      let scale = getScale(this.mattingCanvas.width,this.mattingCanvas.height,this.mattingCanvas.width,this.mattingCanvas.height)
-      this.runner.run(scale);
+      // TODO : do matting
     }
-    let mattingurl = this.mattingCanvas.toDataURL();
-    document.getElementById('test_ori').src=mattingurl;
     window.requestAnimationFrame(this.redraw);
   };
   applyAction = (action) => {
@@ -170,10 +156,6 @@ class PaintCanvas extends Component {
     if (this.props.paintStore.split) {
       this.resultCtx.drawImage(img, 0, 0, img.width, img.height);
       let imgData = this.resultCtx.getImageData(0,0,img.width,img.height);
-      let gl = this.mattingCanvas.getContext('webgl');
-      var mattingData = new Uint8Array(width * height * 4);
-      gl.readPixels(0, 0, img.width, img.height, gl.RGBA, gl.UNSIGNED_BYTE, mattingData);
-      console.log(mattingData)
     }
   }
 
