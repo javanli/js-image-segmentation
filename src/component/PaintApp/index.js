@@ -159,7 +159,12 @@ class PaintApp extends Component {
             <Tooltip trigger={isMobile ? 'contextMenu' : 'hover'} placement="bottom" title="最佳比例">
               <Button className="fit" onClick={() => { paintStore.resetImgSize() }}></Button></Tooltip>
           </Button.Group>
-          <Button className="fit" onClick={() => { paintStore.setNeedMatting(true) }}></Button>
+          <Button className="segment" type="primary" onClick={() => { paintStore.setNeedMatting(true) }}>抠图</Button>
+          <Button className="segment" type="primary" onClick={() => {
+            let dataURL = paintStore.alphaCanvas.toDataURL("image/png");
+
+            window.location = dataURL.replace("image/png", "image/octet-stream");;
+          }}>导出</Button>
         </div>
         {slider}
         <PaintCanvas></PaintCanvas>
@@ -196,8 +201,6 @@ class PaintApp extends Component {
             </Button>
           </Upload>
         </Modal>
-        <img id="test_ori" src="" alt=""/>
-        <img id="test_tri" src="" alt=""/>
       </div>
     );
   }

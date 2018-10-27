@@ -2,7 +2,8 @@ import React, { Component } from "react";
 import { inject, observer } from "mobx-react";
 import { ACTION_CHOOSE_DEL, ACTION_CHOOSE_ADD, ACTION_RUBBER, data2gray } from '../../common/common'
 import { ACTION_CLEAR } from "../../common/common";
-import MattingHandler from "../../common/poison-matting/matting"
+import SegmentationWorker from 'worker-loader!../../common/graphcut/worker.js';// eslint-disable-line import/no-webpack-loader-syntax
+import sigma from 'sigma';
 @inject('paintStore')
 @observer
 class PaintCanvas extends Component {
@@ -16,10 +17,6 @@ class PaintCanvas extends Component {
     window.requestAnimationFrame(this.redraw);
     this.offscreenCanvas = document.createElement("canvas");
     this.offscreenCtx = this.offscreenCanvas.getContext('2d');
-    this.triCanvas = document.createElement("canvas");
-    this.triCtx = this.triCanvas.getContext('2d');
-    this.alphaCanvas = document.createElement("canvas");
-    this.alphaCtx = this.alphaCanvas.getContext('2d');
   }
   /**
    * 工具函数
@@ -67,8 +64,6 @@ class PaintCanvas extends Component {
       this.ctx.clearRect(0, 0, paintStore.canvasWidth, paintStore.canvasHeight);
     }
     this.offscreenCtx.clearRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
-    this.triCtx.fillStyle = "#888";
-    this.triCtx.fillRect(0, 0, this.triCanvas.width, this.triCanvas.height);
   }
   redraw = () => {
     let { paintStore } = this.props;
@@ -80,10 +75,6 @@ class PaintCanvas extends Component {
       this.drawImg(paintStore.imgAction);
       this.offscreenCanvas.width = img.width;
       this.offscreenCanvas.height = img.height;
-      this.triCanvas.width = img.width;
-      this.triCanvas.height = img.height;
-      this.triCtx.fillStyle = "#888";
-      this.triCtx.fillRect(0, 0, this.triCanvas.width, this.triCanvas.height);
       paintStore.actions.forEach((action, idx) => {
         if (idx <= paintStore.actionIndex) {
           this.applyAction(action);
@@ -97,33 +88,26 @@ class PaintCanvas extends Component {
 
     }
     if (paintStore.needMatting && paintStore.imgAction.img) {
+      console.log('needMatting')
       paintStore.setNeedMatting(false);
       // TODO : do matting
-      let grayData = paintStore.grayData.slice();
-      let tridata = this.triCtx.getImageData(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height).data;
-      let triGrayData = data2gray(tridata, img.width, img.height);
-      let handler = new MattingHandler(grayData, triGrayData,img.width,img.height);
-      let alpha = handler.handle();
-
-      let originData = paintStore.data.slice();
-      for (let i = 0; i < img.height; i++) {
-        for (let j = 0; j < img.width; j++) {
-          let index = ((i * img.width) + j) * 4;
-          // originData[index + 3] = Math.round(alpha[i * img.width + j] * 255);
-          originData[index + 3] = Math.round(alpha[i * img.width + j] * 255) > 125 ? 255 : 0;
-        }
-      }
-      let imgData = new ImageData(originData,img.width,img.height);
-      // imgData.data = originData;
-      this.alphaCanvas.width = img.width;
-      this.alphaCanvas.height = img.height;
-      this.alphaCtx.putImageData(imgData,0,0);
-
-      let { width, height } = paintStore.imgAction;
-      let { x, y } = this.props.paintStore.getImgOrigin();
-      this.resultCtx.clearRect(0,0,this.resultCanvas.width,this.resultCanvas.height);
-      this.resultCtx.drawImage(this.alphaCanvas, x, y, width, height);
-
+      let imgData = new ImageData(paintStore.data.slice(),img.width,img.height);
+      let triData = this.offscreenCtx.getImageData(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
+      console.log(triData)
+      const worker = new SegmentationWorker();
+			worker.postMessage( { imgData, triData} );
+			worker.addEventListener('message', (e) => {
+        console.log('on cut end')
+				let imgData = e.data.imgData;
+        paintStore.alphaCanvas.width = img.width;
+        paintStore.alphaCanvas.height = img.height;
+        paintStore.alphaCtx.putImageData(imgData,0,0);
+  
+        let { width, height } = paintStore.imgAction;
+        let { x, y } = this.props.paintStore.getImgOrigin();
+        this.resultCtx.clearRect(0,0,this.resultCanvas.width,this.resultCanvas.height);
+        this.resultCtx.drawImage(paintStore.alphaCanvas, x, y, width, height);
+			});
     }
     window.requestAnimationFrame(this.redraw);
   };
@@ -131,22 +115,17 @@ class PaintCanvas extends Component {
     let { paintStore } = this.props;
     if (action.type === ACTION_CHOOSE_ADD) {
       this.drawLine(action, paintStore.addColor, this.offscreenCtx);
-      this.drawLine(action, '#fff', this.triCtx);
     }
     else if (action.type === ACTION_CHOOSE_DEL) {
       this.drawLine(action, paintStore.delColor, this.offscreenCtx);
-      this.drawLine(action, '#000', this.triCtx);
     }
     else if (action.type === ACTION_RUBBER) {
       this.offscreenCtx.globalCompositeOperation = "destination-out";
       this.drawLine(action, '#fff', this.offscreenCtx);
       this.offscreenCtx.globalCompositeOperation = "source-over";
-      this.drawLine(action, '#888', this.triCtx);
     }
     else if (action.type === ACTION_CLEAR) {
       this.offscreenCtx.clearRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
-      this.triCtx.fillStyle = "#888";
-      this.triCtx.fillRect(0, 0, this.triCanvas.width, this.triCanvas.height);
     }
 
   }

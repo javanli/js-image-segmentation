@@ -37,7 +37,6 @@ export default class PaintStore {
         y = window.screen.height;
       }
     }
-    console.log('resize',x,y)
     this.split = x > 700 && !isMobile;
     this.windowSize = { x, y };
     this.needRedraw = true;
@@ -50,6 +49,8 @@ export default class PaintStore {
     window.onresize = this.updateWindowSize;
     window.onload = this.updateWindowSize;
     message.config({ maxCount: 1 })
+    this.alphaCanvas = document.createElement("canvas");
+    this.alphaCtx = this.alphaCanvas.getContext('2d');
   }
   @computed get canUndo() {
     return this.actionIndex >= 0
@@ -192,7 +193,8 @@ export default class PaintStore {
     var ctx = canvas.getContext("2d");
     ctx.drawImage(img, 0, 0);
 
-    this.data = ctx.getImageData(0, 0, img.width, img.height).data;
+    this.imgData = ctx.getImageData(0, 0, img.width, img.height);
+    this.data = this.imgData.data;
     this.grayData = data2gray(this.data, img.width, img.height);
   }
   @action

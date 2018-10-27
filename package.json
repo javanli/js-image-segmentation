@@ -12,7 +12,9 @@
     "react-app-rewire-mobx": "^1.0.8",
     "react-app-rewired": "^1.5.2",
     "react-dom": "^16.4.2",
-    "react-scripts": "1.1.5"
+    "react-scripts": "1.1.5",
+    "sigma": "^1.2.1",
+    "worker-loader": "^2.0.0"
   },
   "scripts": {
     "start": "react-app-rewired start",
