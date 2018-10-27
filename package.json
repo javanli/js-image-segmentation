@@ -2,6 +2,7 @@
   "name": "canvas-paint",
   "version": "0.1.0",
   "private": true,
+  "homepage": "/segmentation",
   "dependencies": {
     "antd": "^3.8.4",
     "babel-plugin-import": "^1.8.0",

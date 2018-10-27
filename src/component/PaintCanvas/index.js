@@ -234,19 +234,19 @@ class PaintCanvas extends Component {
     let { paintStore } = this.props;
     let img = paintStore.imgAction.img;
     if (paintStore.type === ACTION_CHOOSE_ADD) {
-      cursor = 'url(./add.png),auto';
+      cursor = `url(${process.env.PUBLIC_URL}/add.png),auto`;
     }
     else if (paintStore.type === ACTION_CHOOSE_DEL) {
-      cursor = 'url(./minus.png),auto';
+      cursor = `url(${process.env.PUBLIC_URL}/minus.png),auto`;
     }
     else if (paintStore.type === ACTION_RUBBER) {
-      cursor = 'url(./rubber.png),auto';
+      cursor = `url(${process.env.PUBLIC_URL}/rubber.png),auto`;
     }
     else {
       cursor = 'pointer';
     }
     return (
-      <div className="paint-canvas-wrapper" style={{ background: "url(./bg.png) left center" }}>
+      <div className="paint-canvas-wrapper" style={{ background: `url(${process.env.PUBLIC_URL}/bg.png) left center` }}>
         <div style={{
           display: "block",
           touchAction: "none",
